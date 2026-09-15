@@ -2,11 +2,6 @@
 title: Java 教程简介
 ---
 
-<video controls style="width:100%;border-radius:8px;">
-  <source src="./demo.mp4" type="video/mp4">
-  你的浏览器不支持视频播放，请更换浏览器。
-</video>
-
 # Java 教程
 
 ::: tip 说明
