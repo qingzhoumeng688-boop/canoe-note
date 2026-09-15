@@ -1,0 +1,19 @@
+# 其他
+## 鼠标G304更换微动
+### 微动链接
+~~~
+https://v.douyin.com/OOCHDWHWvP0/
+~~~
+### 更换步骤
+1. 撕掉底部脚贴，卸下 4 颗底壳螺丝
+2. 开盖前**先拔微动排线 + 电池仓排线**，千万别硬扯，很容易扯断座子
+3. 拆下左右两块微动小板（螺丝规格不一样，分开放）
+4. 换上新买的热插拔小板，装上微动，原路装回，测试按键再贴新脚贴
+### 视频链接
+<iframe 
+  style="width:100%; aspect-ratio:16/9; border-radius:8px;"
+  src="https://player.bilibili.com/player.html?bvid=BV1TUsaeoEw2" 
+  frameborder="0" 
+  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+  allowfullscreen>
+</iframe>
