@@ -35,7 +35,7 @@ features:
   - title: 运维
     details: Linux命令、Shell脚本、Docker容器、Git版本管理、服务部署、日志排查、服务器监控，后端必备运维实操笔记。
   - title: 工具
-    details: Linux命令、Shell脚本、Docker容器、Git版本管理、服务部署、日志排查、服务器监控，后端必备运维实操笔记。
+    details: VMware
   - title: 健身
     details: Linux命令、Shell脚本、Docker容器、Git版本管理、服务部署、日志排查、服务器监控，后端必备运维实操笔记。
   - title: 做饭
