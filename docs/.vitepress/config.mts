@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+  base: '/canoe-note/',
   ignoreDeadLinks: true,
   title: "轻舟的笔记",
   description: "轻舟的一些学习和生活笔记",
