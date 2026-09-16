@@ -1,0 +1,22 @@
+name: Sync from Gitee
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fetch Gitee and push to GitHub
+        run: |
+          git config user.name "github-actions"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add gitee https://gitee.com/你的Gitee用户名/仓库名.git
+          git fetch gitee master
+          git reset --hard gitee/master
+          git push origin master --force
