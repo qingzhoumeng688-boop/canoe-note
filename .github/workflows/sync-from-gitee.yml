@@ -2,11 +2,12 @@ name: Sync from Gitee
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 0 1,11,21 * *'
   workflow_dispatch:
 
 permissions:
   contents: write
+  actions: write
 
 jobs:
   sync:
@@ -16,6 +17,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Sync Gitee except GitHub workflows
+        id: sync
         run: |
           git config user.name "github-actions"
           git config user.email "github-actions[bot]@users.noreply.github.com"
@@ -23,8 +25,15 @@ jobs:
           rsync -a --delete --exclude '.git/' --exclude '.github/workflows/' /tmp/gitee-src/ ./
           git add -A
           if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "Gitee 无新变更"
             exit 0
           fi
           git commit -m "chore: sync from Gitee (keep GitHub workflows)"
           git push origin HEAD:master
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+      - name: Trigger Pages deploy
+        if: steps.sync.outputs.changed == 'true'
+        run: gh workflow run deploy.yml --ref master
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
