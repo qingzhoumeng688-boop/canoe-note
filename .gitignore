@@ -22,6 +22,9 @@ pnpm-debug.log*
 .DS_Store
 Thumbs.db
 
+# WorkBuddy 本地工作笔记（非站点内容，不入库）
+.workbuddy/
+
 # 本地环境变量（不要提交密钥）
 .env
 .env.local

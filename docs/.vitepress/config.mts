@@ -18,6 +18,7 @@ export default defineConfig({
     nav: [
       { text: '首页', link: '/' },
       { text: 'Java', link: '/java/intro' },
+      { text: 'AI 应用', link: '/java/ai/overview' },
       { text: '运维', link: '/java/intro' },
       { text: '工具', link: '/java/intro' },
       { text: '健身', link: '/fitness/intro' },
@@ -209,20 +210,58 @@ export default defineConfig({
               { text: '分布式面试题', link: '/java/interview/distribute' },
             ]
           },
+        ]
+      },
+      {
+        text: 'Java AI 应用',
+        collapsed: true,
+        items: [
           {
-            text: 'Java AI应用',
+            text: '基础篇',
             collapsed: true,
             items: [
-              { text: 'AI开发概览', link: '/java/ai/overview' },
-              { text: '大模型API接入(OpenAI/通义)', link: '/java/ai/llm-api' },
-              { text: '提示词工程', link: '/java/ai/prompt' },
-              { text: 'LangChain4j框架', link: '/java/ai/langchain4j' },
-              { text: '向量数据库', link: '/java/ai/vector-db' },
-              { text: 'RAG检索增强生成', link: '/java/ai/rag' },
-              { text: '智能体Agent开发', link: '/java/ai/agent' },
-              { text: 'Spring AI框架', link: '/java/ai/spring-ai' },
-              { text: '流式对话与Function Calling', link: '/java/ai/stream-fc' },
-              { text: 'AI应用落地案例', link: '/java/ai/case' },
+              { text: '01 AI 开发概览', link: '/java/ai/overview' },
+              { text: '02 大模型 API 接入', link: '/java/ai/llm-api' },
+              { text: '03 提示词工程', link: '/java/ai/prompt' },
+              { text: '04 流式输出与 Function Calling', link: '/java/ai/stream-fc' },
+              { text: '05 Spring AI 框架', link: '/java/ai/spring-ai' },
+              { text: '06 LangChain4j 框架', link: '/java/ai/langchain4j' },
+            ]
+          },
+          {
+            text: 'Spring AI Alibaba',
+            collapsed: true,
+            items: [
+              { text: '07 概览与三层架构', link: '/java/saa/intro' },
+              { text: '08 快速上手', link: '/java/saa/quickstart' },
+              { text: '09 版本与生态关系', link: '/java/saa/ecosystem' },
+              { text: '10 ReactAgent', link: '/java/saa/reactagent' },
+              { text: '11 多 Agent 编排', link: '/java/saa/multi-agent' },
+              { text: '12 上下文工程', link: '/java/saa/context-engineering' },
+              { text: '13 人机协同 HITL', link: '/java/saa/hitl' },
+              { text: '14 Graph 构图基础', link: '/java/saa/graph-basics' },
+              { text: '15 状态与流程控制', link: '/java/saa/graph-state' },
+              { text: '16 持久化与断点续跑', link: '/java/saa/graph-persist' },
+              { text: '17 模型与 ChatClient', link: '/java/saa/model' },
+              { text: '18 Tool 与 MCP', link: '/java/saa/tool-mcp' },
+            ]
+          },
+          {
+            text: '检索增强 RAG',
+            collapsed: true,
+            items: [
+              { text: '19 RAG 检索增强', link: '/java/saa/rag' },
+              { text: '20 RAG 进阶调优', link: '/java/saa/rag-advanced' },
+            ]
+          },
+          {
+            text: '工程化与落地',
+            collapsed: true,
+            items: [
+              { text: '21 可观测性与评估', link: '/java/saa/observability' },
+              { text: '22 Studio 与 Admin', link: '/java/saa/studio-admin' },
+              { text: '23 实战案例', link: '/java/saa/cases' },
+              { text: '24 常见问题与踩坑', link: '/java/saa/faq' },
             ]
           },
         ]
