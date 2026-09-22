@@ -10,10 +10,4 @@ https://v.douyin.com/OOCHDWHWvP0/
 3. 拆下左右两块微动小板（螺丝规格不一样，分开放）
 4. 换上新买的热插拔小板，装上微动，原路装回，测试按键再贴新脚贴
 ### 视频链接
-<iframe 
-  style="width:100%; aspect-ratio:16/9; border-radius:8px;"
-  src="https://player.bilibili.com/player.html?bvid=BV1TUsaeoEw2" 
-  frameborder="0" 
-  allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-  allowfullscreen>
-</iframe>
+<BiliVideo bvid="BV1TUsaeoEw2" title="G304 更换微动 · 完整视频" />

@@ -1,36 +1,45 @@
 # canoe-notes
 
-#### Description
-{**When you're done, you can delete the content in this README and update the file with details for others getting started with your repository**}
+> Personal notes site built with VitePress — Java backend, middleware, AI applications, DevOps, plus fitness and cooking notes.
 
-#### Software Architecture
-Software architecture description
+**Live site: <https://qingzhoumeng688-boop.github.io/canoe-note/>**
 
-#### Installation
+This project's main documentation is in Chinese; see [README.md](./README.md) for the full version.
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+## Content
 
-#### Instructions
+207 Markdown files, roughly 66k lines. **75 chapters are finished** (~56k lines); the remaining 132 are structured outlines awaiting content.
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+- **Java AI (24 chapters, complete)** — LLM APIs, prompt engineering, streaming & function calling, Spring AI, LangChain4j, Spring AI Alibaba (three-layer architecture, Graph, multi-agent, RAG with Elasticsearch)
+- **Middleware (28 chapters, complete)** — Redis (including distributed locks and a full Redisson guide), RabbitMQ, RocketMQ, Elasticsearch
+- **DevOps (20 chapters)** — Docker (6 complete), Linux (14 outlines), VMware
+- **Java tutorials (92 outlines)** — core Java, OOP, collections/IO, concurrency, JVM, MySQL, MyBatis, Spring, Spring Boot, distributed systems, interview questions, and 26 design-pattern chapters
+- **Life** — fitness (8 complete, with embedded Bilibili demo videos that load on click) and cooking (2 outlines)
 
-#### Contribution
+## Run locally
 
-1.  Fork the repository
-2.  Create Feat_xxx branch
-3.  Commit your code
-4.  Create Pull Request
+Requires Node.js 18+ (verified on Node 22).
 
+```bash
+npm install
+npm run docs:dev      # dev server with hot reload
+npm run docs:build    # build to docs/.vitepress/dist
+npm run docs:preview  # preview the build output
+```
 
-#### Gitee Feature
+## Layout
 
-1.  You can use Readme\_XXX.md to support different languages, such as Readme\_en.md, Readme\_zh.md
-2.  Gitee blog [blog.gitee.com](https://blog.gitee.com)
-3.  Explore open source project [https://gitee.com/explore](https://gitee.com/explore)
-4.  The most valuable open source project [GVP](https://gitee.com/gvp)
-5.  The manual of Gitee [https://gitee.com/help](https://gitee.com/help)
-6.  The most popular members  [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
+```
+docs/
+├── .vitepress/config.mts   # site config and sidebar
+├── .vitepress/theme/       # custom theme (BiliVideo component)
+├── index.md                # home page
+├── java/                   # Java tutorials, AI apps, middleware
+├── ops/                    # Linux, Docker, VMware
+├── fitness/
+└── cooking/
+```
+
+## Deployment
+
+Published to GitHub Pages. Note that `base: '/canoe-note/'` is set in `config.mts` and must match the deployment path.
