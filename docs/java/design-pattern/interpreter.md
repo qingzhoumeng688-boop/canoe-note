@@ -46,20 +46,23 @@ public class BadCalculator {
 
 ## 三、结构与角色
 
-```text
-        ┌───────────────┐
-        │  Expression   │  抽象表达式（定义 interpret）
-        └───────┬───────┘
-      ┌─────────┴─────────┐
-      │                   │
-┌─────▼─────┐      ┌──────▼──────┐
-│ Terminal   │      │ NonTerminal  │  非终结符表达式
-│ Expression │      │ Expression   │  (加减等组合规则)
-│ (数字/变量) │      └───┬─────┬───┘
-└────────────┘          │     │ 持有子表达式
-                  ┌─────▼┐   ┌▼─────┐
-                  │左表达式│   │右表达式│
-                  └──────┘   └──────┘
+```mermaid
+classDiagram
+    class Expression {
+        +interpret() int
+    }
+    class TerminalExpression {
+        -int value
+        +interpret() int
+    }
+    class NonTerminalExpression {
+        -Expression left
+        -Expression right
+        +interpret() int
+    }
+    Expression <|.. TerminalExpression : 终结符（数字/变量）
+    Expression <|.. NonTerminalExpression : 非终结符（加减等组合规则）
+    NonTerminalExpression o-- Expression : 持有左、右子表达式
 ```
 
 | 角色 | 类名（示例） | 职责 |

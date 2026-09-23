@@ -58,25 +58,27 @@ public class CoffeeMaker {
 
 ## 三、结构与角色
 
-```text
-        ┌──────────────────────────────┐
-        │        AbstractClass         │  抽象类（流程拥有者）
-        ├──────────────────────────────┤
-        │ + make(): final              │  模板方法（final，定骨架）
-        │   ├ boilWater()   [具体]      │
-        │   ├ brew()       [抽象]       │  ← 子类填
-        │   ├ pourInCup()  [具体]      │
-        │   └ addCondiment()[抽象]      │  ← 子类填
-        │ + hook()        [具体，空]   │  钩子（可选覆盖）
-        └───────────────┬──────────────┘
-                        │ 继承
-            ┌───────────┴────────────┐
-            ▼                        ▼
-   ┌────────────────┐      ┌─────────────────┐
-   │   TeaMaker      │      │   CoffeeMaker    │  具体子类
-   │ + brew()        │      │ + brew()         │
-   │ + addCondiment()│      │ + addCondiment() │
-   └────────────────┘      └─────────────────┘
+```mermaid
+classDiagram
+    class AbstractClass {
+        +make()
+        -boilWater()
+        +brew()*
+        -pourInCup()
+        +addCondiment()*
+        +hook()
+    }
+    class TeaMaker {
+        +brew()
+        +addCondiment()
+    }
+    class CoffeeMaker {
+        +brew()
+        +addCondiment()
+    }
+    AbstractClass <|-- TeaMaker : 填抽象方法
+    AbstractClass <|-- CoffeeMaker : 填抽象方法
+    note for AbstractClass "make() 是 final 模板方法，定死算法骨架；brew() 与 addCondiment() 由子类实现"
 ```
 
 | 角色 | 职责 |

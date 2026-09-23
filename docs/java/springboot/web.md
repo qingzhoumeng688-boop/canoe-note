@@ -6,21 +6,15 @@ Spring Boot 让写一个 HTTP 接口变得极其简单，但"能跑"和"写得�
 
 一次请求从浏览器到你的方法，中间经过这条链路（Spring Boot 已经帮你把 `DispatcherServlet` 自动注册好了）：
 
-```text
-HTTP 请求
-   │
-   ▼
-DispatcherServlet            ← 前端控制器，总调度
-   │
-   ├─ HandlerMapping          ← 根据 URL 找到对应的 Controller 方法
-   ▼
-HandlerAdapter               ← 适配并调用方法，处理参数解析
-   │
-   ▼
-Controller 方法              ← 你的业务代码
-   │
-   ├─ 返回 ModelAndView ──► ViewResolver（页面渲染）
-   └─ 返回对象/JSON   ──► HttpMessageConverter（序列化成 JSON）
+```mermaid
+flowchart TD
+    R["HTTP 请求"] --> DS["DispatcherServlet：前端控制器，总调度"]
+    DS --> HM["HandlerMapping：根据 URL 找到对应的 Controller 方法"]
+    HM --> HA["HandlerAdapter：适配并调用方法，处理参数解析"]
+    HA --> CT["Controller 方法：你的业务代码"]
+    CT --> D{"返回类型"}
+    D -- "返回 ModelAndView" --> VR["ViewResolver：页面渲染"]
+    D -- "返回对象 / JSON" --> MC["HttpMessageConverter：序列化成 JSON"]
 ```
 
 在 Spring Boot 里你**不需要**自己配 `DispatcherServlet`、`ViewResolver`、`HttpMessageConverter`——`WebMvcAutoConfiguration` 已经按约定配好了 Jackson 作为默认 JSON 转换器、默认静态资源映射等。你要做的只是写 Controller。

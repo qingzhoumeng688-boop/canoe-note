@@ -157,20 +157,12 @@ journalctl -p err -b                 # 本次启动以来的 error 级日志
 
 **CPU 100% 的完整排查流程**（Java 应用版）：
 
-```text
-top                          → 找到 CPU 最高的进程 PID
-  │
-  ▼
-top -Hp <PID>                → 找到该进程里最忙的线程 TID（十进制）
-  │
-  ▼
-printf "%x\n" <TID>          → 把线程号转成十六进制 nid
-  │
-  ▼
-jstack <PID> > /tmp/stack.txt   → 导出线程栈
-  │
-  ▼
-grep -A 20 <nid> /tmp/stack.txt   → 在栈里搜索 nid，定位到具体代码行
+```mermaid
+flowchart TD
+    S1["top：找到 CPU 最高的进程 PID"] --> S2["top -Hp PID：找到该进程里最忙的线程 TID（十进制）"]
+    S2 --> S3["printf '%x' TID：把线程号转成十六进制 nid"]
+    S3 --> S4["jstack PID 重定向到 /tmp/stack.txt：导出线程栈"]
+    S4 --> S5["grep -A 20 nid /tmp/stack.txt：在栈里搜索 nid，定位到具体代码行"]
 ```
 
 ```bash
@@ -184,16 +176,13 @@ grep -A 30 "nid=0x4e8" /tmp/stack.txt   # 找到对应线程栈，定位死循�
 
 **"负载高但 CPU 不高"的分支**：这种情况通常不是 CPU 计算忙，而是进程在等——要么 IO 慢（看 `%wa` 和 `iostat`），要么大量进程卡在 D 状态（不可中断，通常是磁盘/网络存储挂死），要么频繁上下文切换（`vmstat` 的 `cs` 飙升、`r` 队列长）。决策树如下：
 
-```text
-负载高，但 %us+%sy 不高
-│
-├─ %wa 高 ───────────────▶ 磁盘 IO 瓶颈 → iostat/iotop 找进程
-│
-├─ vmstat 的 b 列高（D 进程多）▶ 不可中断等待 → 多为 NFS/磁盘挂死
-│
-├─ cs 上下文切换极高 ─────▶ 线程/进程切换过频 → pidstat -w 查
-│
-└─ r 队列长但都空闲 ─────▶ 锁竞争/等网络 → 看网络与业务日志
+```mermaid
+flowchart TD
+    START["负载高，但 %us+%sy 不高"]
+    START --> A["%wa 高"] --> A2["磁盘 IO 瓶颈 → iostat / iotop 找进程"]
+    START --> B["vmstat 的 b 列高（D 进程多）"] --> B2["不可中断等待 → 多为 NFS / 磁盘挂死"]
+    START --> C["cs 上下文切换极高"] --> C2["线程 / 进程切换过频 → pidstat -w 查"]
+    START --> D["r 队列长但都空闲"] --> D2["锁竞争 / 等网络 → 看网络与业务日志"]
 ```
 
 ## 八、常见故障案例

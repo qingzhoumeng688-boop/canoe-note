@@ -167,15 +167,15 @@ ES 和关系型数据库的术语容易混，先用表对齐心智：
 
 一个索引在物理上不是"一整块"，而是层层拆分的：
 
-```text
-Index（blog_articles）
-├── Shard 0  （主分片，数据的一部分）
-│   ├── Segment 1  （倒排索引文件，不可变）
-│   ├── Segment 2
-│   └── Segment 3
-└── Shard 1  （主分片，数据的另一部分）
-    ├── Segment 1
-    └── Segment 2
+```mermaid
+flowchart TD
+    I["Index（blog_articles）"] --> S0["Shard 0：主分片，数据的一部分"]
+    I --> S1["Shard 1：主分片，数据的另一部分"]
+    S0 --> A1["Segment 1：倒排索引文件，不可变"]
+    S0 --> A2["Segment 2"]
+    S0 --> A3["Segment 3"]
+    S1 --> B1["Segment 1"]
+    S1 --> B2["Segment 2"]
 ```
 
 | 层级 | 是什么 | 要点 |
@@ -313,20 +313,12 @@ blog_articles 1      r       UNASSIGNED
 
 一次 `index` 写入，数据会经过这几道关：
 
-```text
-你的请求
-  │
-  ▼
-① 写内存 buffer（此时还搜不到）
-  │
-  ▼
-② 同时写 translog（WAL 预写日志，防丢）
-  │
-  ▼
-③ 默认每 1 秒 refresh 一次：buffer → 生成一个新 Segment（进 OS 缓存，可被搜）
-  │                                   ↑ 这就是"近实时"：不是立刻，是最多等 1 秒
-  ▼
-④ 段越来越多，后台 merge 合并；translog 攒够/30 秒 flush：段落盘，translog 清空
+```mermaid
+flowchart TD
+    R["你的请求"] --> S1["① 写内存 buffer（此时还搜不到）"]
+    S1 --> S2["② 同时写 translog（WAL 预写日志，防丢）"]
+    S2 -->|"近实时：不是立刻，最多等 1 秒"| S3["③ 默认每 1 秒 refresh：buffer 生成一个新 Segment，进 OS 缓存可被搜"]
+    S3 --> S4["④ 段越来越多后台 merge 合并；translog 攒够或 30 秒 flush：段落盘，translog 清空"]
 ```
 
 ### 5.2 三个关键词
@@ -366,20 +358,12 @@ curl -X POST "http://localhost:9200/blog_articles/_doc/1?refresh=wait_for" \
 
 ES 里的分词器（Analyzer）由三部分**按顺序**组成：
 
-```text
-原始文本
-  │
-  ▼
-① Character Filter（字符过滤器）：先改文本，如去掉 HTML 标签、把 & 换成 and
-  │
-  ▼
-② Tokenizer（分词器）：按规则把文本切成词项（token），如按空格、按标点
-  │
-  ▼
-③ Token Filter（词项过滤器）：再加工，如转小写、去停用词、同义词扩展
-  │
-  ▼
-最终词项（写入倒排索引 / 用于搜索）
+```mermaid
+flowchart TD
+    A["原始文本"] --> B["① Character Filter（字符过滤器）：先改文本，如去掉 HTML 标签、把 & 换成 and"]
+    B --> C["② Tokenizer（分词器）：按规则把文本切成词项（token），如按空格、按标点"]
+    C --> D["③ Token Filter（词项过滤器）：再加工，如转小写、去停用词、同义词扩展"]
+    D --> E["最终词项（写入倒排索引 / 用于搜索）"]
 ```
 
 | 组件 | 数量 | 作用 | 常见例子 |

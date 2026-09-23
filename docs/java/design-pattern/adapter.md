@@ -63,26 +63,24 @@ class ChargingStation {
 
 ## 三、结构与角色
 
-```text
-        ┌────────────┐
-        │  Client    │  只认 Target 接口
-        └─────┬──────┘
-              │ charge()
-              ▼
-        ┌────────────┐
-        │  Target    │  客户端期望的接口（欧标插座）
-        │ (接口)     │
-        └─────▲──────┘
-              │ 实现
-        ┌─────┴─────────┐
-        │   Adapter     │  适配器：实现 Target，持有 Adaptee
-        │ (对象适配器)   │
-        └─────┬─────────┘
-              │ 持有/调用
-        ┌─────▼──────┐
-        │  Adaptee   │  被适配者：已有但接口不兼容（国标插头）
-        │ (已有类)    │
-        └────────────┘
+```mermaid
+classDiagram
+    class Client {
+        +charge()
+    }
+    class Target {
+        +charge()
+    }
+    class Adapter {
+        -Adaptee adaptee
+        +charge()
+    }
+    class Adaptee {
+        +chargeWithChinaStandard()
+    }
+    Client --> Target : 只认 Target 接口
+    Target <|.. Adapter : 实现
+    Adapter o-- Adaptee : 持有并调用
 ```
 
 | 角色 | 对应到充电例子 | 职责 |

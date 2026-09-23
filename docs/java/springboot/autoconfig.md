@@ -46,23 +46,17 @@ public class CacheController {
 
 `@EnableAutoConfiguration` 是自动配置的总开关。它的核心实现是借助 `@Import(AutoConfigurationImportSelector.class)`，把一大批"候选自动配置类"导入容器。完整流程如下：
 
-```text
-@EnableAutoConfiguration
-      │
-      ▼
-@Import(AutoConfigurationImportSelector.class)
-      │
-      ▼
-selectImports()
-      │  1. 读取所有候选自动配置类的全限定名
-      ▼
-SpringFactoriesLoader / AutoConfiguration.imports
-      │  2. 去重 + 排除（spring.autoconfigure.exclude）
-      ▼
-过滤 @Conditional 条件
-      │  3. 按 @ConditionalOnXxx 逐个判断是否满足
-      ▼
-注册满足条件的配置类 → 其中的 @Bean 进入容器
+```mermaid
+flowchart TD
+    S0["@EnableAutoConfiguration 总开关"]
+    S1["@Import(AutoConfigurationImportSelector.class)"]
+    S2["selectImports()"]
+    S3["读取所有候选自动配置类的全限定名"]
+    S4["SpringFactoriesLoader / AutoConfiguration.imports"]
+    S5["去重 + 排除（spring.autoconfigure.exclude）"]
+    S6["过滤 @Conditional 条件：按 @ConditionalOnXxx 逐个判断是否满足"]
+    S7["注册满足条件的配置类，其中的 @Bean 进入容器"]
+    S0 --> S1 --> S2 --> S3 --> S4 --> S5 --> S6 --> S7
 ```
 
 `AutoConfigurationImportSelector` 在 `selectImports()` 阶段做三件事：

@@ -26,20 +26,17 @@
 
 ### 1.2 一次工具调用的真实流程
 
-```text
-① 你发问题 + 工具清单给模型
-   问题：「北京今天天气怎么样？」
-   工具：[ getWeather(city: String) ]
-
-                │  ② 模型思考后，返回的不是答案，
-                │     而是一段「调用指令」（tool_calls）：
-                │     { "name": "getWeather", "arguments": {"city": "北京"} }
-                ▼
-③ 你的程序（Spring AI）拿到这段 JSON，在本机真正执行 getWeather("北京")
-                │
-                │  ④ 把执行结果（"晴, 25°C"）当成一条消息回传给模型
-                ▼
-⑤ 模型拿到结果，组织成自然语言回答你：「北京今天晴，25°C。」
+```mermaid
+sequenceDiagram
+    participant App as 你的程序 Spring AI
+    participant LLM as 大模型
+    participant Tool as getWeather 工具
+    App->>LLM: ① 发问题「北京今天天气怎么样？」+ 工具清单 getWeather（city）
+    LLM-->>App: ② 思考后返回调用指令 tool_calls：getWeather，参数 city = 北京
+    App->>Tool: ③ 在本机真正执行 getWeather（北京）
+    Tool-->>App: 返回执行结果：晴，25 摄氏度
+    App->>LLM: ④ 把执行结果当成一条消息回传
+    LLM-->>App: ⑤ 组织成自然语言回答：北京今天晴，25 摄氏度
 ```
 
 ::: tip 把这句话刻进脑子里
@@ -311,16 +308,19 @@ public String queryOrder(
 
 打个比方——**它就像 AI 世界的 USB 接口**：
 
-```text
-没有 MCP 之前（各自私有协议，像一堆五花八门的充电器）：
-  Java 项目 ──自己写适配──> 天气工具
-  Python 项目 ──自己写适配──> 天气工具
-  Node 项目 ──自己写适配──> 天气工具
-
-有了 MCP 之后（统一接口，像 USB）：
-  Java 项目 ──标准 MCP 协议──┐
-  Python 项目 ──标准 MCP 协议──┼──> 同一个 MCP Server（天气工具）
-  Node 项目  ──标准 MCP 协议──┘
+```mermaid
+flowchart LR
+    subgraph BEFORE["没有 MCP 之前（各自私有协议，像一堆五花八门的充电器）"]
+        J1["Java 项目"] -->|"自己写适配"| T1["天气工具"]
+        P1["Python 项目"] -->|"自己写适配"| T1
+        N1["Node 项目"] -->|"自己写适配"| T1
+    end
+    subgraph AFTER["有了 MCP 之后（统一接口，像 USB）"]
+        J2["Java 项目"] -->|"标准 MCP 协议"| S["同一个 MCP Server（天气工具）"]
+        P2["Python 项目"] -->|"标准 MCP 协议"| S
+        N2["Node 项目"] -->|"标准 MCP 协议"| S
+    end
+    BEFORE --> AFTER
 ```
 
 你只要把「天气工具」做成**一个 MCP Server**，所有支持 MCP 的 AI 应用（无论什么语言、什么框架）都能即插即用，不用重复开发。

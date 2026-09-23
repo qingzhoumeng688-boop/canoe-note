@@ -258,18 +258,15 @@ public class BoundedQueueDemo {
 
 AQS 靠三大组件工作：
 
-```text
-                  AQS 内部结构
-┌──────────────────────────────────────────┐
-│  volatile int state   ← 同步状态          │
-│  (ReentrantLock 用它记重入次数)            │
-├──────────────────────────────────────────┤
-│  FIFO 双向队列（CLH 变体，head→tail）      │
-│  head → [node1] ⇄ [node2] ⇄ [node3] ←tail │
-│  每个 node 封装一个等待中的线程             │
-├──────────────────────────────────────────┤
-│  CAS 操作：原子地修改 state、原子地入队     │
-└──────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    AQS["AQS 内部结构"]
+    S["volatile int state：同步状态（ReentrantLock 用它记重入次数）"]
+    Q["FIFO 双向队列（CLH 变体，head → tail）：head → node1 ⇄ node2 ⇄ node3 ← tail，每个 node 封装一个等待中的线程"]
+    C["CAS 操作：原子地修改 state、原子地入队"]
+    AQS --> S
+    AQS --> Q
+    AQS --> C
 ```
 
 - **`state`**：同步状态。比如 `ReentrantLock` 用它表示重入次数，`Semaphore` 用它表示剩余许可数。

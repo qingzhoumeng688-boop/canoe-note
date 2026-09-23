@@ -223,17 +223,12 @@ systemctl restart app
 
 传统分区大小固定，扩容要停机重分。LVM（Logical Volume Manager）把这事变成"动态舀水"：把多块物理盘搅成**一个存储池**，再按需切分给上层用。
 
-```text
-物理盘  ──pvcreate──▶  物理卷 PV  ──vgcreate──▶  卷组 VG（存储池）
-                                                  │
-                                            ┌──────┴──────┐
-                                         lvcreate      lvcreate
-                                            │             │
-                                         逻辑卷 LV     逻辑卷 LV
-                                            │             │
-                                        格式化 xfs    格式化 ext4
-                                            │             │
-                                         挂载 /data    挂载 /backup
+```mermaid
+flowchart LR
+    PD["物理盘"] -->|"pvcreate"| PV["物理卷 PV"]
+    PV -->|"vgcreate"| VG["卷组 VG（存储池）"]
+    VG -->|"lvcreate"| LV1["逻辑卷 LV"] --> FS1["格式化 xfs"] --> MO1["挂载 /data"]
+    VG -->|"lvcreate"| LV2["逻辑卷 LV"] --> FS2["格式化 ext4"] --> MO2["挂载 /backup"]
 ```
 
 三个核心概念：

@@ -1,7 +1,8 @@
 import { defineConfig } from 'vitepress'
+import { withMermaid } from 'vitepress-plugin-mermaid'
 
 // https://vitepress.dev/reference/site-config
-export default defineConfig({
+export default withMermaid(defineConfig({
   base: '/canoe-note/',
   ignoreDeadLinks: true,
   title: "轻舟的笔记",
@@ -9,6 +10,29 @@ export default defineConfig({
   head: [
     ['link', { rel: 'icon', type: 'image/png', href: '/favicon.png' }],
   ],
+  // Mermaid 图表支持：```mermaid 代码块会被渲染为 SVG。
+  // theme 仅作用于亮色模式；暗色由插件根据 body 的 dark class 自动切换。
+  mermaid: {
+    theme: 'neutral'
+  },
+  // dev 模式下 mermaid 的 CJS 依赖必须先预打包，否则浏览器会报
+  // "does not provide an export named 'default'"（这些包没有 ESM 构建）。
+  // 插件内置的 optimizeDeps.include 清单还是 mermaid 10 时代的，漏了下面这些：
+  //   fastdom                              —— 布局引擎，mermaid 11 新增依赖
+  //   fastdom/extensions/fastdom-promised.js —— 子路径，include 包根不会覆盖它
+  //   cytoscape-fcose                      —— mindmap 布局
+  //   dayjs/plugin/duration.js             —— 甘特图用；插件只 alias 了另外三个 dayjs 插件，漏了它
+  // withMermaid() 会把这里的内容与它内置的合并，所以只需补齐差额。
+  vite: {
+    optimizeDeps: {
+      include: [
+        'fastdom',
+        'fastdom/extensions/fastdom-promised.js',
+        'cytoscape-fcose',
+        'dayjs/plugin/duration.js'
+      ]
+    }
+  },
   themeConfig: {
     outline: {
       level: 'deep',
@@ -19,8 +43,16 @@ export default defineConfig({
       { text: '首页', link: '/' },
       { text: 'Java', link: '/java/intro' },
       { text: 'AI 应用', link: '/java/ai/overview' },
+      { text: '计算机基础', items: [
+        { text: '计算机网络', link: '/cs/network/overview' },
+        { text: '操作系统', link: '/cs/os/overview' },
+        { text: '数据结构与算法', link: '/cs/dsa/overview' }
+      ]},
       { text: '运维', link: '/ops/linux/overview' },
-      { text: '工具', link: '/ops/vmware/vmware' },
+      { text: '工具', items: [
+        { text: 'Git 版本控制', link: '/ops/git/overview' },
+        { text: 'VMware 虚拟机', link: '/ops/vmware/vmware' }
+      ]},
       { text: '健身', link: '/fitness/intro' },
       { text: '做饭', link: '/cooking/intro' },
       { text: '其他', link: '/other/intro' }
@@ -348,9 +380,76 @@ export default defineConfig({
         ]
       },
       {
+        text: '计算机基础',
+        collapsed: false,
+        items: [
+          {
+            text: '计算机网络',
+            collapsed: true,
+            items: [
+              { text: '01 计算机网络概述与分层模型', link: '/cs/network/overview' },
+              { text: '02 物理层与数据链路层', link: '/cs/network/datalink' },
+              { text: '03 网络层：IP、子网划分与路由', link: '/cs/network/network' },
+              { text: '04 传输层：UDP 与 TCP 基础', link: '/cs/network/transport' },
+              { text: '05 TCP 可靠传输与连接管理', link: '/cs/network/tcp' },
+              { text: '06 应用层核心协议', link: '/cs/network/app' },
+              { text: '07 HTTP/HTTPS 深入与 TLS', link: '/cs/network/https' },
+              { text: '08 网络编程与排错实战', link: '/cs/network/programming' }
+            ]
+          },
+          {
+            text: '操作系统',
+            collapsed: true,
+            items: [
+              { text: '01 操作系统概述与体系结构', link: '/cs/os/overview' },
+              { text: '02 进程与线程', link: '/cs/os/process' },
+              { text: '03 进程调度', link: '/cs/os/schedule' },
+              { text: '04 进程间通信', link: '/cs/os/ipc' },
+              { text: '05 内存管理基础', link: '/cs/os/memory' },
+              { text: '06 虚拟内存与页面置换', link: '/cs/os/vm' },
+              { text: '07 文件系统', link: '/cs/os/fs' },
+              { text: '08 并发控制与死锁', link: '/cs/os/concurrency' }
+            ]
+          },
+          {
+            text: '数据结构与算法',
+            collapsed: true,
+            items: [
+              { text: '01 数据结构与算法概述及复杂度分析', link: '/cs/dsa/overview' },
+              { text: '02 线性表：数组、链表、栈与队列', link: '/cs/dsa/linear' },
+              { text: '03 树与二叉树', link: '/cs/dsa/tree' },
+              { text: '04 哈希表', link: '/cs/dsa/hash' },
+              { text: '05 图', link: '/cs/dsa/graph' },
+              { text: '06 排序算法', link: '/cs/dsa/sort' },
+              { text: '07 查找算法', link: '/cs/dsa/search' },
+              { text: '08 字符串算法', link: '/cs/dsa/string' },
+              { text: '09 高级数据结构', link: '/cs/dsa/advanced' },
+              { text: '10 算法思想与实战', link: '/cs/dsa/algo' }
+            ]
+          }
+        ]
+      },
+      {
         text: '运维',
         items: [
           { text: 'VMware', link: '/ops/vmware/vmware' },
+          {
+            text: 'Git 版本控制',
+            collapsed: true,
+            items: [
+              { text: '01 Git 入门与安装配置', link: '/ops/git/overview' },
+              { text: '02 Git 内部原理与对象模型', link: '/ops/git/internals' },
+              { text: '03 基础操作：提交、查看与忽略', link: '/ops/git/basic' },
+              { text: '04 分支、合并与冲突', link: '/ops/git/branch' },
+              { text: '05 远程仓库与团队协作', link: '/ops/git/remote' },
+              { text: '06 撤销、回退与“救火”', link: '/ops/git/undo' },
+              { text: '07 变基 rebase 与历史整理', link: '/ops/git/rebase' },
+              { text: '08 标签、子模块与 Worktree', link: '/ops/git/extras' },
+              { text: '09 团队工作流与提交规范', link: '/ops/git/workflow' },
+              { text: '10 常用场景速查与排错', link: '/ops/git/faq' },
+              { text: '11 在 IDEA 里用 Git', link: '/ops/git/idea' },
+            ]
+          },
           {
             text: 'Linux',
             collapsed: true,
@@ -408,6 +507,7 @@ export default defineConfig({
         text: '其他',
         items: [
           { text: '入门指南', link: '/other/intro' },
+          { text: 'Mermaid 图表规范', link: '/other/mermaid' },
         ]
       }
     ],
@@ -415,4 +515,4 @@ export default defineConfig({
     //   { icon: 'github', link: 'https://github.com/vuejs/vitepress' }
     // ]
   }
-})
+}))

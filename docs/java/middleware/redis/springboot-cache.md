@@ -29,36 +29,23 @@
 
 **读流程（Cache Aside 读）**：
 
-```text
-请求查商品 id=1
-   │
-   ▼
-① 先查 Redis：GET product:1
-   │
-   ├─ 命中 ──► 直接返回（不碰数据库，最快）
-   │
-   └─ 未命中 ──► ② 查 MySQL：SELECT * FROM product WHERE id=1
-                    │
-                    ▼
-                 ③ 回写缓存：SET product:1 <json> EX 1800
-                    │
-                    ▼
-                 ④ 返回数据
+```mermaid
+flowchart TD
+    A["请求查商品 id=1"] --> B["① 先查 Redis：GET product:1"]
+    B --> C{"是否命中?"}
+    C -->|"命中"| D["直接返回（不碰数据库，最快）"]
+    C -->|"未命中"| E["② 查 MySQL：SELECT * FROM product WHERE id=1"]
+    E --> F["③ 回写缓存：SET product:1 商品 JSON EX 1800"]
+    F --> G["④ 返回数据"]
 ```
 
 **写流程（Cache Aside 写）**：
 
-```text
-更新商品 id=1 的价格
-   │
-   ▼
-① 先更新数据库：UPDATE product SET price=? WHERE id=1
-   │
-   ▼
-② 再删除缓存：DEL product:1
-   │
-   ▼
-返回（下次读会自动回写新值）
+```mermaid
+flowchart TD
+    A["更新商品 id=1 的价格"] --> B["① 先更新数据库：UPDATE product SET price=? WHERE id=1"]
+    B --> C["② 再删除缓存：DEL product:1"]
+    C --> D["返回（下次读会自动回写新值）"]
 ```
 
 ::: tip 为什么是"删缓存"而不是"更新缓存"

@@ -589,12 +589,13 @@ Redis 就是那个"手脚离谱快的收银员"：它每个命令执行极快（
 
 答案是 **IO 多路复用**（Linux 上用 `epoll`）。还是比喻：收银员虽然一次只结一个账，但他有个"呼叫器"能同时监听 1000 个收银通道——**哪个通道的顾客准备好了（数据到了），呼叫器就提醒他"去结这个"**。他挨个快速处理，看起来就像同时服务了所有人。
 
-```text
-客户端A ─┐
-客户端B ─┤
-客户端C ─┼──► [epoll 多路复用器] ──► 单线程命令执行器 ──► 逐个处理
-  ...   ─┤      （谁有数据唤醒谁）        （快、无锁）
-客户端N ─┘
+```mermaid
+flowchart LR
+    A["客户端A"] --> E["epoll 多路复用器：谁有数据唤醒谁"]
+    B["客户端B"] --> E
+    C["客户端C"] --> E
+    D["客户端N ..."] --> E
+    E --> X["单线程命令执行器：快、无锁，逐个处理"]
 ```
 
 ::: tip 关键区分
@@ -891,33 +892,16 @@ canoe:temp 剩余过期秒数 = 60
 
 把新手最容易摔的坑集中贴在这面墙上，照着避：
 
-```text
-┌─────────────────────────────────────────────────────────────────┐
-│ 坑 1：生产用 KEYS * 全量扫描 → 服务雪崩                          │
-│   正解：用 SCAN 游标遍历                                          │
-│                                                                 │
-│ 坑 2：SET 覆盖了带过期的 key → 缓存变永久脏数据                   │
-│   正解：保留过期用 SET key val KEEPTTL，或先读 TTL 再重设         │
-│                                                                 │
-│ 坑 3：不设 maxmemory → Redis 吃满内存触发 OOM                     │
-│   正解：redis.conf 必设 maxmemory + maxmemory-policy             │
-│                                                                 │
-│ 坑 4：不设 requirepass 还暴露公网 → 分钟级被黑清空                │
-│   正解：强密码 + 防火墙 + (可选) rename-command 禁用危险命令     │
-│                                                                 │
-│ 坑 5：用 SELECT 切换多库，后来上了 Redis Cluster 报错            │
-│   正解：业务默认用 db0，靠 key 命名做逻辑隔离                     │
-│                                                                 │
-│ 坑 6：大 key（百万 field 的 Hash / 几十 MB 的 String）           │
-│   正解：拆分；删除大 key 用 UNLINK 而非 DEL                      │
-│                                                                 │
-│ 坑 7：用 DEL 删大 key 卡住单线程                                 │
-│   正解：Redis 4.0+ 用 UNLINK 异步删除                            │
-│                                                                 │
-│ 坑 8：把 Redis 当主库，核心数据只放内存不同步 MySQL               │
-│   正解：Redis 是缓存/辅助，权威数据放 MySQL                      │
-└─────────────────────────────────────────────────────────────────┘
-```
+| # | 坑 | 正解 |
+| --- | --- | --- |
+| 1 | 生产用 KEYS * 全量扫描 → 服务雪崩 | 用 SCAN 游标遍历 |
+| 2 | SET 覆盖了带过期的 key → 缓存变永久脏数据 | 保留过期用 SET key val KEEPTTL，或先读 TTL 再重设 |
+| 3 | 不设 maxmemory → Redis 吃满内存触发 OOM | redis.conf 必设 maxmemory + maxmemory-policy |
+| 4 | 不设 requirepass 还暴露公网 → 分钟级被黑清空 | 强密码 + 防火墙 +（可选）rename-command 禁用危险命令 |
+| 5 | 用 SELECT 切换多库，后来上了 Redis Cluster 报错 | 业务默认用 db0，靠 key 命名做逻辑隔离 |
+| 6 | 大 key（百万 field 的 Hash / 几十 MB 的 String） | 拆分；删除大 key 用 UNLINK 而非 DEL |
+| 7 | 用 DEL 删大 key 卡住单线程 | Redis 4.0+ 用 UNLINK 异步删除 |
+| 8 | 把 Redis 当主库，核心数据只放内存不同步 MySQL | Redis 是缓存/辅助，权威数据放 MySQL |
 
 ::: danger 危险命令建议直接禁用
 在 `redis.conf` 里用 `rename-command` 把"删库级"命令改名甚至清空，生产强烈建议：

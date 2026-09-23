@@ -6,18 +6,18 @@
 
 Java 线程在 `Thread.State` 枚举里定义了**六种状态**。一张流转图先看全貌：
 
-```text
-        new Thread()
-             │
-             ▼
-            NEW ────────── start() ──────────► RUNNABLE ◄────────┐
-                                                            │     │ (被 OS 调度)
-                                                            ▼     │
-                                                      运行中 / 就绪  │
-   RUNNABLE ── 等 synchronized 锁 ──► BLOCKED ── 获锁 ────────────┘
-   RUNNABLE ── wait()/join()/park() ──► WAITING ── notify/中断 ───┘
-   RUNNABLE ── sleep(t)/wait(t)/join(t) ──► TIMED_WAITING ── 超时/notify ─┘
-   任意状态 ── run() 正常结束或抛异常 ──► TERMINATED
+```mermaid
+stateDiagram-v2
+    [*] --> NEW : new Thread()
+    NEW --> RUNNABLE : start()
+    RUNNABLE --> BLOCKED : 等 synchronized 锁
+    BLOCKED --> RUNNABLE : 获锁
+    RUNNABLE --> WAITING : wait() / join() / park()
+    WAITING --> RUNNABLE : notify() / 中断
+    RUNNABLE --> TIMED_WAITING : sleep(t) / wait(t) / join(t)
+    TIMED_WAITING --> RUNNABLE : 超时 / notify()
+    RUNNABLE --> TERMINATED : run() 正常结束或抛异常
+    TERMINATED --> [*]
 ```
 
 逐个解释：

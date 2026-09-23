@@ -47,18 +47,18 @@ public class LeaveApprover {
 
 ## 三、结构与角色
 
-```text
-   Client
-     │  new 组长(); 组长.setNext(经理); 经理.setNext(总监);
-     ▼
-   ┌──────────────┐    setNext()    ┌──────────────┐    setNext()    ┌──────────────┐
-   │  TeamLeader   │ ─────────────► │   Manager     │ ─────────────► │   Director    │
-   │  (组长)       │                │   (经理)      │                │   (总监)      │
-   ├──────────────┤                ├──────────────┤                ├──────────────┤
-   │ handle(days) │                │ handle(days) │                │ handle(days) │
-   └──────┬───────┘                └──────┬───────┘                └──────┬───────┘
-          │ next.handle(days) 若自己不处理    │ next.handle(days)              │ (链尾)
-          └──────────────────────────────────┘
+```mermaid
+flowchart TD
+    C["Client：用 setNext 串成链"] --> TL["TeamLeader 组长 · handle(days)"]
+    TL --> T1{"组长能批：days ≤ 1 ?"}
+    T1 -->|"是"| R1["组长批准"]
+    T1 -->|"否，next.handle(days)"| M["Manager 经理 · handle(days)"]
+    M --> M1{"经理能批：days ≤ 3 ?"}
+    M1 -->|"是"| R2["经理批准"]
+    M1 -->|"否，next.handle(days)"| D["Director 总监 · handle(days)"]
+    D --> D1{"总监能批：days ≤ 7 ?"}
+    D1 -->|"是"| R3["总监批准"]
+    D1 -->|"链尾，next 为空"| R4["无人处理，返回 null"]
 ```
 
 | 角色 | 职责 |

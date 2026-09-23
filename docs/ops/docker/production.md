@@ -128,12 +128,12 @@ echo "部署时使用：${REGISTRY}/${IMAGE}:${FULL_TAG}"
 
 ### 3.1 典型流水线
 
-```text
-┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐   ┌──────────┐
-│  代码提交  │→ │  编译测试  │→ │ 构建镜像  │→ │ 扫描推送  │→ │  部署     │
-│  git push │   │ mvn test │   │ docker   │   │ trivy    │   │ compose  │
-│           │   │          │   │  build   │   │ push     │   │  up / K8s│
-└──────────┘   └──────────┘   └──────────┘   └──────────┘   └──────────┘
+```mermaid
+flowchart LR
+    S1["代码提交 git push"] --> S2["编译测试 mvn test"]
+    S2 --> S3["构建镜像 docker build"]
+    S3 --> S4["扫描推送 trivy / push"]
+    S4 --> S5["部署 compose up / K8s"]
 ```
 
 ### 3.2 GitHub Actions 示例
@@ -517,16 +517,12 @@ spring:
 
 ### 6.1 监控方案
 
-```text
-┌─────────────────┐    ┌──────────────┐    ┌─────────────┐    ┌──────────┐
-│  Docker 容器     │───►│ cAdvisor /   │───►│ Prometheus  │───►│ Grafana  │
-│  (应用指标)      │    │ redis_export│    │  时序数据库  │    │  看板     │
-└─────────────────┘    └──────────────┘    └─────────────┘    └────┬─────┘
-                                                                    │
-                                                              ┌─────▼──────┐
-                                                              │ AlertManager│
-                                                              │   告警      │
-                                                              └────────────┘
+```mermaid
+flowchart LR
+    DOCKER["Docker 容器（应用指标）"] --> EXPORTER["cAdvisor / redis_exporter"]
+    EXPORTER --> PROM["Prometheus 时序数据库"]
+    PROM --> GRAFANA["Grafana 看板"]
+    GRAFANA --> ALERT["AlertManager 告警"]
 ```
 
 **cAdvisor**（Google 出品，容器资源监控）：
@@ -608,14 +604,16 @@ services:
 
 ### 7.1 通用排查流程
 
-```text
-1. 看现象        →  docker ps -a（STATUS 列）
-2. 看退出码      →  0 正常 / 1 报错 / 137 OOM / 127 命令不存在
-3. 看日志        →  docker logs --tail 200 -t 容器
-4. 看配置        →  docker inspect 容器
-5. 看资源        →  docker stats / docker top
-6. 进容器看      →  docker exec -it 容器 sh
-7. 看宿主机      →  df -h / free -m / top / dmesg
+```mermaid
+flowchart TD
+    STEP1["1. 看现象：docker ps -a（STATUS 列）"]
+    STEP2["2. 看退出码：0 正常 / 1 报错 / 137 OOM / 127 命令不存在"]
+    STEP3["3. 看日志：docker logs --tail 200 -t 容器"]
+    STEP4["4. 看配置：docker inspect 容器"]
+    STEP5["5. 看资源：docker stats / docker top"]
+    STEP6["6. 进容器看：docker exec -it 容器 sh"]
+    STEP7["7. 看宿主机：df -h / free -m / top / dmesg"]
+    STEP1 --> STEP2 --> STEP3 --> STEP4 --> STEP5 --> STEP6 --> STEP7
 ```
 
 ### 7.2 常见故障对照表
@@ -737,16 +735,12 @@ alias docker=podman
 
 ### 8.3 下一步学什么
 
-```text
-Docker（单机容器）
-    ↓
-Docker Compose（单机多容器编排）
-    ↓
-Kubernetes（集群编排）← 生产级标准
-    ↓
-Helm / Kustomize（K8s 应用包管理）
-    ↓
-Service Mesh（Istio）/ GitOps（ArgoCD）
+```mermaid
+flowchart TD
+    D["Docker（单机容器）"] --> C["Docker Compose（单机多容器编排）"]
+    C --> K["Kubernetes（集群编排）生产级标准"]
+    K --> H["Helm / Kustomize（K8s 应用包管理）"]
+    H --> S["Service Mesh（Istio）/ GitOps（ArgoCD）"]
 ```
 
 如果你已经掌握本专栏的 6 章内容，接下来的学习路径建议：

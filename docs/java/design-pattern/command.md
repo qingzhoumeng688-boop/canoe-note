@@ -64,36 +64,43 @@ public class BadWaiter {
 
 ## 三、结构与角色
 
-```text
-        ┌──────────┐
-        │  Client  │  创建命令，并指定接收者
-        └────┬─────┘
-             │ new SteakCommand(chef)
-             ▼
-        ┌──────────┐     实现      ┌──────────────────┐
-        │  Waiter  │◀──────────────│    Command       │
-        │ (Invoker)│        ┌──────│  (命令接口)       │
-        │  服务员  │        │      │  + execute()      │
-        └────┬─────┘        │      └────────┬─────────┘
-             │ takeOrder /  │               │ implements
-             │ placeOrders  │      ┌────────┴─────────┐
-             │              │      │ SteakCommand     │
-             │              │      │ NoodleCommand    │
-             │              │      │ CakeCommand      │
-             └──────────────┼──────│ (具体命令)        │
-                            │      │ - chef: Chef     │
-                            │      │ + execute()      │
-                            │      └────────┬─────────┘
-                            │               │ 调用
-                            │               ▼
-                            │      ┌──────────────────┐
-                            │      │     Chef         │
-                            │      │ (Receiver 接收者) │
-                            │      │ + cookSteak()    │
-                            │      │ + cookNoodle()   │
-                            │      └──────────────────┘
-                            │
-                    持有 / 触发命令
+```mermaid
+classDiagram
+    class Client {
+        +main()
+    }
+    class Waiter {
+        -Command command
+        +takeOrder(Command command)
+        +placeOrders()
+    }
+    class Command {
+        +execute()
+    }
+    class SteakCommand {
+        -Chef chef
+        +execute()
+    }
+    class NoodleCommand {
+        -Chef chef
+        +execute()
+    }
+    class CakeCommand {
+        -Chef chef
+        +execute()
+    }
+    class Chef {
+        +cookSteak()
+        +cookNoodle()
+    }
+    Client ..> SteakCommand : 创建并指定接收者
+    Waiter o-- Command : 持有并触发命令
+    Command <|.. SteakCommand : 实现
+    Command <|.. NoodleCommand : 实现
+    Command <|.. CakeCommand : 实现
+    SteakCommand --> Chef : 调用
+    NoodleCommand --> Chef : 调用
+    CakeCommand --> Chef : 调用
 ```
 
 | 角色 | 对应类 | 职责 |

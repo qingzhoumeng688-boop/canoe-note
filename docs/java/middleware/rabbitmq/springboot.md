@@ -1081,13 +1081,12 @@ prefetch 大 = 批量预取 = 吞吐高，但一旦消费者卡死，那一批�
 
 整体思路（用 fanout 广播，两个消费者各干各的）：
 
-```text
-注册 Controller
-     │  写用户表（同步）
-     │  convertAndSend → fanout: user.events, routingKey 随意
-     ▼
- RabbitMQ  ──广播──┬──► point.queue ──► 积分消费者：加积分 + 写积分流水
-                   └──► email.queue ──► 邮件消费者：发欢迎邮件
+```mermaid
+flowchart TD
+    A["注册 Controller"] -->|"写用户表（同步）"| B["convertAndSend：fanout user.events，routingKey 随意"]
+    B --> M["RabbitMQ fanout 广播"]
+    M --> Q1["point.queue"] --> C1["积分消费者：加积分 + 写积分流水"]
+    M --> Q2["email.queue"] --> C2["邮件消费者：发欢迎邮件"]
 ```
 
 ### 8.1 建表 SQL

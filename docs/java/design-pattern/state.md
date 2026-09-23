@@ -82,30 +82,33 @@ public class BadElevator {
 
 ## 三、结构与角色
 
-```text
-        ┌───────────────────────────┐
-        │        Context           │  电梯（环境类）
-        │  - currentState:State     │  持有当前状态，把请求委派给它
-        │  + open() / close()       │
-        │  + run()  / stop()        │
-        │  + setState(State)        │◀──────────────┐
-        └────────────┬──────────────┘               │ 回调切状态
-                     │ 委托                          │
-                     ▼                              │
-        ┌───────────────────────────┐               │
-        │         State             │  抽象状态     │
-        │  + open()                 │              │
-        │  + close()                │              │
-        │  + run()                  │              │
-        │  + stop()                 │              │
-        └────────────┬──────────────┘              │
-        ┌────────────┼────────────┬──────────┐     │
-        ▼            ▼            ▼          ▼      │
-   ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐ │
-   │ OpenState│ │CloseState│ │ RunState │ │StopState │ │
-   │ 开门状态 │ │ 关门状态 │ │ 运行状态 │ │ 停止状态 │ │
-   └────┬────┘ └────┬────┘ └────┬────┘ └────┬────┘ │
-        │ 在各自方法里调用 context.setState(...) ─────┘
+```mermaid
+classDiagram
+    class Context {
+        -State currentState
+        +open()
+        +close()
+        +run()
+        +stop()
+        +setState(State state)
+    }
+    class State {
+        #Context context
+        +open()
+        +close()
+        +run()
+        +stop()
+    }
+    class OpenState
+    class CloseState
+    class RunState
+    class StopState
+    Context o-- State : 持有当前状态并委派请求
+    State <|-- OpenState : 开门状态
+    State <|-- CloseState : 关门状态
+    State <|-- RunState : 运行状态
+    State <|-- StopState : 停止状态
+    State ..> Context : 回调 setState 切换状态
 ```
 
 | 角色 | 对应类 | 职责 |

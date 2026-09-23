@@ -540,12 +540,12 @@ history.forEach(h -> { /* 逐个看每步的 state */ });
 
 本文第 ③ 步的 `resume` 接口，本质上就是一次最简 HITL：在 `human_approve` 前中断 → 把审批单给人看 → 人填 `approved/rejected` → 恢复执行。
 
-```text
-           ┌──── 中断点（interruptBefore）────┐
-START ─> prepare ─┤                      ├─> execute ─> END
-                  │   人工审批（HITL）      │
-                  │   人填 approved/rejected│
-                  └──────── 恢复 resume ────┘
+```mermaid
+flowchart LR
+    A["START"] --> B["prepare 节点"]
+    B -->|"interruptBefore：在此中断并存档"| C["人工审批（HITL）：人填 approved / rejected"]
+    C -->|"调用 resume 恢复执行"| D["execute 节点"]
+    D --> E["END"]
 ```
 
 更完整的 HITL 实践（含 `HumanNode` 内置节点、条件边按人决策选路、超时默认通过等）请见 **[第 13 章 人机协同]**（链接以你站点实际路径为准）。本文只负责把"中断—存档—恢复"这条技术链路讲透。

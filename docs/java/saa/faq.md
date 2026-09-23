@@ -363,12 +363,21 @@ management:
 
 回看 01 → 24 章，你建立的能力地图：
 
-```text
-基础认知   01 概览 → 02 API 接入 → 03 提示词 → 04 流式/Function Calling → 05 Spring AI → 06 LangChain4j
-SAA 框架  07-09 架构/上手/生态 → 10 ReactAgent → 11 多Agent → 12 上下文工程 → 13 HITL
-         14-16 Graph 三章 → 17 模型接入 → 18 Tool/MCP
-检索增强  19 Elasticsearch 向量库 → 20 RAG 调优
-工程化    21 可观测与评估 → 22 Studio/Admin → 23 实战案例 → 24 FAQ（你在这里）
+```mermaid
+flowchart TD
+    subgraph G1["基础认知"]
+        A1["01 概览"] --> A2["02 API 接入"] --> A3["03 提示词"] --> A4["04 流式输出与 Function Calling"] --> A5["05 Spring AI"] --> A6["06 LangChain4j"]
+    end
+    subgraph G2["SAA 框架"]
+        B1["07-09 架构 / 上手 / 生态"] --> B2["10 ReactAgent"] --> B3["11 多 Agent"] --> B4["12 上下文工程"] --> B5["13 HITL"] --> B6["14-16 Graph 三章"] --> B7["17 模型接入"] --> B8["18 Tool 与 MCP"]
+    end
+    subgraph G3["检索增强"]
+        C1["19 Elasticsearch 向量库"] --> C2["20 RAG 调优"]
+    end
+    subgraph G4["工程化"]
+        D1["21 可观测与评估"] --> D2["22 Studio / Admin"] --> D3["23 实战案例"] --> D4["24 FAQ（你在这里）"]
+    end
+    G1 --> G2 --> G3 --> G4
 ```
 
 一句话总结：**你从"大模型是个续写机器"这个朴素认知出发，逐步给它装上了记忆（RAG）、手和眼（Tool/MCP）、协作与流程（Graph/多 Agent）、可靠性（HITL/重试）、以及工程化闭环（可观测/评测/平台）。** 这恰好是 Java 工程师把"聪明的大模型"变成"靠谱的线上系统"的全过程。

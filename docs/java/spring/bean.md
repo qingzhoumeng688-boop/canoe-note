@@ -6,28 +6,31 @@
 
 一个 Bean 从生到死，要经过以下关键节点：
 
-```text
-实例化(new) → 属性填充(依赖注入) → Aware 回调 → BeanPostProcessor 前置
-   → 初始化(@PostConstruct → InitializingBean → init-method)
-   → BeanPostProcessor 后置(此处生成 AOP 代理)
-   → 【使用中】
-   → 销毁(@PreDestroy → DisposableBean → destroy-method)
+```mermaid
+flowchart TD
+    A["实例化 new"] --> B["属性填充：依赖注入"]
+    B --> C["Aware 回调"]
+    C --> D["BeanPostProcessor 前置 before"]
+    D --> E["初始化：@PostConstruct → InitializingBean → init-method"]
+    E --> F["BeanPostProcessor 后置 after（AOP 代理在此生成）"]
+    F --> G["使用中"]
+    G --> H["销毁：@PreDestroy → DisposableBean → destroy-method"]
 ```
 
-```text
-                  ┌─────────────── 出生 ───────────────┐
-实例化          属性填充        Aware        BPP 前置      初始化         BPP 后置
- new 对象  ──▶  注入依赖  ──▶  回调接口  ──▶  before  ──▶  @PostConstruct
-                                                                  │
-                                                          InitializingBean
-                                                                  │
-                                                              init-method
-                                                                  │
-                                                          BPP 后置(after)
-                                                                  │
-                                                          ★ AOP 代理在此生成
-                  └─────────────── 使用中 ──────────────┘
-销毁：@PreDestroy → DisposableBean → destroy-method（容器关闭时）
+```mermaid
+flowchart TD
+    A["实例化：new 对象"] --> B["属性填充：注入依赖"]
+    B --> C["Aware 回调接口"]
+    C --> D["BeanPostProcessor 前置 before"]
+    D --> E1["初始化 @PostConstruct"]
+    E1 --> E2["初始化 InitializingBean"]
+    E2 --> E3["初始化 init-method"]
+    E3 --> F["BeanPostProcessor 后置 after"]
+    F --> P["AOP 代理在此生成"]
+    P --> G["使用中"]
+    G --> H1["销毁 @PreDestroy"]
+    H1 --> H2["销毁 DisposableBean"]
+    H2 --> H3["销毁 destroy-method（容器关闭时）"]
 ```
 
 **最关键的认知**：**AOP 的动态代理是在 `BeanPostProcessor` 后置阶段才生成的**。所以你 `@Autowired` 拿到的，其实常常是一个"代理对象"而非原始对象——这一点在 04 AOP 篇的"代理的坑"里会让你少踩很多雷。

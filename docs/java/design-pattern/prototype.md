@@ -60,19 +60,23 @@ class WithoutPrototypeDemo {
 
 ## 三、结构与角色
 
-```text
-   Prototype（原型接口）        Client（调用方）
-   ┌─────────────────┐         ┌──────────────┐
-   │ + clone():自我   │◄─调用───│ 持有原型引用 │
-   └─────────────────┘         └──────────────┘
-            ▲
-      实现/继承
-            │
-   ┌────────┴────────┐
-   │ ConcretePrototype│（具体原型，如 EmailTemplate）
-   │ - 各字段          │
-   │ + clone()        │──返回自身的一个副本
-   └─────────────────┘
+```mermaid
+classDiagram
+    class Prototype {
+        +clone() Prototype
+    }
+    class ConcretePrototype {
+        -String title
+        -String content
+        -List attachments
+        +clone() Prototype
+    }
+    class Client {
+        -Prototype prototype
+        +createCopy()
+    }
+    Prototype <|.. ConcretePrototype : 具体原型（EmailTemplate）
+    Client --> Prototype : 持有原型并调用 clone
 ```
 
 | 角色 | 职责 | 说明 |
@@ -164,16 +168,15 @@ copy1 与 proto 是不同对象？ true
 
 用内存图看浅拷贝的隐患：
 
-```text
-  原型 proto                      副本 copy1（proto.clone()）
-  ┌────────────┐                 ┌────────────┐
-  │ title  ────┼─值拷贝─►"双十一" │ title  ────┼─►"双十一"（各自一份字符串）
-  │ content ──┼─值拷贝─►"五折"   │ content ──┼─►"五折"
-  │ attach ───┼─────────────────┼─┐ attach ─┼─┘
-  └────────────┘                 └─┼────────┘
-                                    ▼
-                          同一个 ArrayList（被共享！）
-      致命：copy1.addAttachment(...) 会影响 proto 的附件！
+```mermaid
+flowchart TD
+    P["原型 proto"] -->|"值拷贝"| PT["title：双十一"]
+    P -->|"值拷贝"| PC["content：五折"]
+    C["副本 copy1（proto.clone()）"] -->|"值拷贝"| CT["title：双十一"]
+    C -->|"值拷贝"| CC["content：五折"]
+    P -->|"引用共享"| A["同一个 ArrayList 附件列表（被共享！）"]
+    C -->|"引用共享"| A
+    A --> W["copy1.addAttachment 会影响 proto 的附件"]
 ```
 
 验证浅拷贝的坑：

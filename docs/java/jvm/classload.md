@@ -97,17 +97,15 @@ public class LoaderShow {
 
 **双亲委派（Parents Delegation）** 的工作流程是：当一个类加载器收到加载请求时，**先不自己加载，而是把请求委派给父加载器**；父加载器能加载就直接返回，只有父加载器**加载不了**（搜索范围找不到该类）时，子加载器才尝试自己加载。
 
-```text
-        Bootstrap (加载 lib/*.jar, 显示为 null)
-              ▲
-              │ parent
-        Platform/Extension (加载 lib/ext)
-              ▲
-              │ parent
-        Application (加载 classpath 业务代码)
-              ▲
-              │ parent
-        自定义 ClassLoader (加载指定目录)
+```mermaid
+flowchart TD
+    CL["自定义 ClassLoader（加载指定目录）"]
+    APP["Application（加载 classpath 业务代码）"]
+    PLT["Platform / Extension（加载 lib/ext）"]
+    BST["Bootstrap（加载 lib/*.jar，显示为 null）"]
+    CL -->|"parent：向上委派加载请求"| APP
+    APP -->|"parent：向上委派加载请求"| PLT
+    PLT -->|"parent：向上委派加载请求"| BST
 ```
 
 **为什么要这么设计？** 两个核心原因：

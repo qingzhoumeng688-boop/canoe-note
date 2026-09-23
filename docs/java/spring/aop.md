@@ -58,14 +58,16 @@ AOP 的做法：把 ①②④ 这些"横切逻辑"写在一个**切面**里，�
 
 **执行顺序**（环绕通知包在最外层，像洋葱）：
 
-```text
-@Around 开始
-  └─ @Before
-       └─ 目标方法执行
-            ├─ 正常 → @AfterReturning
-            └─ 异常 → @AfterThrowing
-       └─ @After（总执行）
-@Around 结束（返回）
+```mermaid
+flowchart TD
+    S["@Around 开始"] --> B["@Before"]
+    B --> T["目标方法执行"]
+    T --> D{"是否正常返回？"}
+    D -- 是 --> AR["@AfterReturning"]
+    D -- 否 --> AT["@AfterThrowing"]
+    AR --> AF["@After（总执行）"]
+    AT --> AF
+    AF --> E["@Around 结束（返回）"]
 ```
 
 ```java

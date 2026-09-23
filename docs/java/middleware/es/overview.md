@@ -396,15 +396,11 @@ public class AliyunEsConfig {
 
 浏览器访问 `http://localhost:5601` → 左侧菜单 **Management（堆叠图标）→ Dev Tools**（或直接搜 "Console"）。打开后是一个左右分栏的编辑器：
 
-```text
-┌───────────────────────────────┬───────────────────────────────┐
-│  左：请求编辑器（写 DSL）        │  右：响应结果（返回 JSON）        │
-│                               │                               │
-│  GET /_cluster/health         │  {                            │
-│                               │    "cluster_name": "...",    │
-│  （点 ▶ 运行，或按快捷键）       │    "status": "yellow",        │
-│                               │    ...                        │
-└───────────────────────────────┴───────────────────────────────┘
+```mermaid
+flowchart LR
+    L["左：请求编辑器（写 DSL）GET /_cluster/health，点运行或按快捷键"]
+    R["右：响应结果（返回 JSON）cluster_name、status 等字段"]
+    L -->|"点运行"| R
 ```
 
 ### 6.2 基本语法

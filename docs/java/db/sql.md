@@ -183,26 +183,13 @@ INSERT INTO orders VALUES (10,1,100),(11,1,200),(12,2,150),(13,NULL,300);
 
 各种 JOIN 的结果示意：
 
-```text
-INNER JOIN（两表都匹配）
-  user.id=1 张三  orders 10/11
-  user.id=2 李四  orders 12
-  （王五无订单 → 不出现；orders 13 无主 → 不出现）
-
-LEFT JOIN（左表全保留，右表无匹配补 NULL）
-  张三 → 10, 11
-  李四 → 12
-  王五 → NULL   ← 右表没匹配上，补空
-
-RIGHT JOIN（右表全保留）
-  10→张三 11→张三 12→李四 13→NULL(无主用户)
-
-FULL OUTER（MySQL 不支持，用 UNION 模拟）
-  = LEFT JOIN 的结果 UNION RIGHT JOIN 的结果
-
-CROSS JOIN（笛卡尔积 = 左行数 × 右行数，慎用）
-  3 用户 × 4 订单 = 12 行
-```
+| JOIN 类型 | 结果示意（user 3 行 × orders 4 行） |
+| --- | --- |
+| INNER JOIN | 两表都匹配：张三 → 订单 10、11；李四 → 订单 12。王五无订单、订单 13 无所属用户，都不出现 |
+| LEFT JOIN | 左表全保留：张三 → 10、11；李四 → 12；王五 → NULL（右表没匹配，补空） |
+| RIGHT JOIN | 右表全保留：10 → 张三、11 → 张三、12 → 李四、13 → NULL（无主用户） |
+| FULL OUTER | MySQL 不支持，用 LEFT JOIN 的结果 UNION RIGHT JOIN 的结果来模拟 |
+| CROSS JOIN | 笛卡尔积：左行数 × 右行数，3 用户 × 4 订单 = 12 行，慎用 |
 
 ```sql
 -- 内连接：只返回两表都匹配的行

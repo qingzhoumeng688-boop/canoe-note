@@ -551,24 +551,24 @@ producer.send(msg);        // 但发消息失败了（网络抖动）→ 订单�
 
 ### 事务消息的原理：两阶段提交 + 回查
 
-```text
-     Producer                              Broker                        Consumer
-        │                                    │                              │
-   ①    │───── 发送 Half 消息（半消息）─────▶│                              │
-        │      对消费者不可见                  │                              │
-        │◀───── 返回"半消息已收到" ───────────│                              │
-        │                                    │                              │
-   ②    │ 执行本地事务（create order）        │                              │
-        │ （写数据库）                        │                              │
-        │                                    │                              │
-   ③    │───── COMMIT / ROLLBACK ───────────▶│                              │
-        │                                    │                              │
-        │        ┌─ COMMIT：消息转为可见 ─────┼─────── 投递消息 ────────────▶│ 消费
-        │        └─ ROLLBACK：消息被丢弃      │                              │
-        │                                    │                              │
-        │  （如果 ③ 迟迟不来，比如 Producer 挂了）                            │
-   ④    │◀───── Broker 主动发起"回查" ────────│                              │
-        │───── 查本地事务状态后回 COMMIT/ROLLBACK/UNKNOW ──▶│                │
+```mermaid
+sequenceDiagram
+    participant P as Producer
+    participant B as Broker
+    participant C as Consumer
+    P->>B: ① 发送 Half 消息（半消息，对消费者不可见）
+    B-->>P: 返回"半消息已收到"
+    P->>P: ② 执行本地事务（create order，写数据库）
+    P->>B: ③ COMMIT / ROLLBACK
+    alt COMMIT
+        B->>C: 消息转为可见并投递，消费者消费
+    else ROLLBACK
+        B->>B: 消息被丢弃
+    end
+    opt ③ 迟迟不来（比如 Producer 挂了）
+        B->>P: ④ Broker 主动发起回查
+        P->>B: 查本地事务状态后回 COMMIT / ROLLBACK / UNKNOW
+    end
 ```
 
 **Half 消息（半消息）**：消息已经写到 Broker 了，但**对消费者不可见**。只有 Producer 明确 COMMIT 之后，消费者才能看到它。

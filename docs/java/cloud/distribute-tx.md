@@ -25,15 +25,31 @@
 
 两阶段提交（2PC）是最经典的分布式事务协议。角色有两个：**协调者（Coordinator，通常是发起方）**和**参与者（Participant，各分支事务）**。
 
-```text
-阶段一：准备（Prepare / 投票）
-协调者 → 参与者A：能提交吗？  A：OK（锁住资源，写 undo/redo 日志）
-协调者 → 参与者B：能提交吗？  B：OK（锁住资源）
-协调者 → 参与者C：能提交吗？  C：OK
-
-阶段二：提交 / 回滚
-如果都 OK → 协调者发 Commit → 各参与者提交，释放锁
-只要有一个 NO → 协调者发 Rollback → 各参与者回滚
+```mermaid
+sequenceDiagram
+    participant CO as 协调者
+    participant PA as 参与者A
+    participant PB as 参与者B
+    participant PC as 参与者C
+    Note over CO,PC: 阶段一：准备 Prepare / 投票
+    CO->>PA: 能提交吗?
+    PA-->>CO: OK（锁住资源，写 undo/redo 日志）
+    CO->>PB: 能提交吗?
+    PB-->>CO: OK（锁住资源）
+    CO->>PC: 能提交吗?
+    PC-->>CO: OK
+    Note over CO,PC: 阶段二：提交 / 回滚
+    alt 全部 OK
+        CO->>PA: Commit
+        CO->>PB: Commit
+        CO->>PC: Commit
+        Note over PA,PC: 提交事务，释放锁
+    else 只要有一个 NO
+        CO->>PA: Rollback
+        CO->>PB: Rollback
+        CO->>PC: Rollback
+        Note over PA,PC: 回滚事务
+    end
 ```
 
 **缺点（这就是它很少被互联网公司采用的原因）：**

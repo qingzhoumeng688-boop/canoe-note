@@ -54,21 +54,37 @@ public class BadComputer {
 
 ## 三、结构与角色
 
-```text
-   Product（成品）          Builder（抽象建造者）
-   ┌──────────┐            ┌────────────────────┐
-   │ - 各部件  │◄─组装──────│ + buildCpu()        │
-   │ + show() │            │ + buildMemory()     │
-   └──────────┘            │ + getResult():Product│
-        ▲                  └────────────────────┘
-        │                         ▲
-   拥有  │                 实现/持有 │
-        │                         │
-   ┌────┴─────┐           ┌───────┴────────┐
-   │ Computer  │           │ ComputerBuilder │（具体建造者）
-   └──────────┘           │ Director（指挥者）│
-                         │  指导 build 步骤  │
-                         └──────────────────┘
+```mermaid
+classDiagram
+    class Product {
+        -String cpu
+        -String memory
+        -String disk
+        +show()
+    }
+    class Computer {
+        -String gpu
+        -String cooler
+        +show()
+    }
+    class Builder {
+        +buildCpu()
+        +buildMemory()
+        +getResult() Product
+    }
+    class ComputerBuilder {
+        -Computer computer
+        +buildCpu()
+        +buildMemory()
+        +build() Computer
+    }
+    class Director {
+        +construct()
+    }
+    Product <|-- Computer : 成品
+    Builder <|.. ComputerBuilder : 实现
+    ComputerBuilder ..> Computer : 组装并交付
+    Director --> ComputerBuilder : 指导 build 步骤
 ```
 
 | 角色 | 职责 | 说明 |

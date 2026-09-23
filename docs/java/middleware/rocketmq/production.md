@@ -14,23 +14,14 @@
 
 ### 三件套
 
-```text
-                        ┌──────────────────────────────────┐
-    Producer 写入 ─────▶│       CommitLog（消息本体）        │
-                        │  所有 Topic 的消息混在一起顺序写    │
-                        │  每个文件固定 1GB，写满切下一个      │
-                        └──────────────┬───────────────────┘
-                                       │ 异步构建索引
-                    ┌──────────────────┼──────────────────┐
-                    ▼                  ▼                  ▼
-        ┌──────────────────┐ ┌──────────────┐ ┌──────────────────┐
-        │  ConsumeQueue    │ │  ConsumeQueue│ │    IndexFile     │
-        │ (Topic-A 队列0)   │ │(Topic-B 队列0)│ │  (按 Key 的索引)  │
-        │ 定长 20 字节/条    │ │              │ │  支持按 Key 查询   │
-        └──────────────────┘ └──────────────┘ └──────────────────┘
-                    │
-                    ▼
-              Consumer 拉取
+```mermaid
+flowchart TD
+    P["Producer 写入"] --> CL["CommitLog（消息本体）：所有 Topic 的消息混在一起顺序写，每个文件固定 1GB，写满切下一个"]
+    CL -->|"异步构建索引"| CQ1["ConsumeQueue（Topic-A 队列0）：定长 20 字节/条"]
+    CL -->|"异步构建索引"| CQ2["ConsumeQueue（Topic-B 队列0）"]
+    CL -->|"异步构建索引"| IF["IndexFile（按 Key 的索引）：支持按 Key 查询"]
+    CQ1 --> C["Consumer 拉取"]
+    CQ2 --> C
 ```
 
 | 文件 | 存什么 | 特点 |
@@ -67,21 +58,12 @@ RocketMQ 用"**一个顺序写的大文件 + 一堆定长小索引**"的结构�
 
 ### 读消息的完整流程
 
-```text
-Consumer 请求：拉取 Topic-A 队列 0，offset = 100
-    │
-    ▼
-1. 读 ConsumeQueue：offset 100 → 文件位置 100 × 20 = 2000
-   拿到：物理偏移量(8B) + 消息长度(4B) + Tag hash(8B)
-    │
-    ▼
-2. 用物理偏移量去 CommitLog 里读消息本体（随机读，但走 PageCache 很快）
-    │
-    ▼
-3. 比对 Tag hash，不匹配就跳过（过滤）
-    │
-    ▼
-4. 返回消息给 Consumer
+```mermaid
+flowchart TD
+    A["Consumer 请求：拉取 Topic-A 队列 0，offset = 100"] --> B["1. 读 ConsumeQueue：offset 100 → 文件位置 100 × 20 = 2000，拿到物理偏移量(8B) + 消息长度(4B) + Tag hash(8B)"]
+    B --> C["2. 用物理偏移量去 CommitLog 里读消息本体（随机读，但走 PageCache 很快）"]
+    C --> D["3. 比对 Tag hash，不匹配就跳过（过滤）"]
+    D --> E["4. 返回消息给 Consumer"]
 ```
 
 注意第 2 步是**随机读**，但因为 CommitLog 刚写完的内容通常在操作系统的 **PageCache** 里（内存），所以实际上大部分是内存读，很快。

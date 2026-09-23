@@ -43,16 +43,28 @@ class EmergencySmsMessage { /* 特急 + 短信 */ }
 
 ## 三、结构与角色
 
-```text
-  抽象维度（消息类型）               实现维度（发送渠道）
-  ┌──────────────┐                ┌──────────────────┐
-  │   Message    │  ──持有引用──▶  │  MessageSender   │
-  │  (抽象类)    │                │  (实现者接口)     │
-  └──────┬───────┘                └────────┬─────────┘
-   ┌─────┼─────┐                    ┌──────┼──────┐
-   │     │     │                    │      │      │
- Common Urgent Emergency          Sms   Email  Wechat
-（扩展抽象）                  （具体实现者）
+```mermaid
+classDiagram
+    class Message {
+        #MessageSender sender
+        +send(String message)
+    }
+    class CommonMessage
+    class UrgentMessage
+    class EmergencyMessage
+    class MessageSender {
+        +send(String message)
+    }
+    class SmsSender
+    class EmailSender
+    class WechatSender
+    Message o-- MessageSender : 持有引用（桥）
+    Message <|-- CommonMessage : 抽象维度扩展
+    Message <|-- UrgentMessage : 抽象维度扩展
+    Message <|-- EmergencyMessage : 抽象维度扩展
+    MessageSender <|.. SmsSender : 实现维度扩展
+    MessageSender <|.. EmailSender : 实现维度扩展
+    MessageSender <|.. WechatSender : 实现维度扩展
 ```
 
 | 角色 | 对应到消息系统 | 职责 |

@@ -10,12 +10,20 @@
 - **分支**：根据条件判断，走不同的分支（`if`、`switch`）。
 - **循环**：满足条件下，把一段代码重复执行多次（`for`、`while`）。
 
-```text
-顺序：  语句1 → 语句2 → 语句3
-分支：  条件 ? ──true──▶ 分支A
-              └─false─▶ 分支B
-循环：  条件 ? ──true──▶ 执行体 ─┐
-              └─false─▶ 结束   ◀─┘
+```mermaid
+flowchart TD
+    subgraph SQ["顺序"]
+        S1["语句1"] --> S2["语句2"] --> S3["语句3"]
+    end
+    subgraph BR["分支"]
+        C1{"条件判断"} -- true --> A["分支 A"]
+        C1 -- false --> B["分支 B"]
+    end
+    subgraph LP["循环"]
+        C2{"条件判断"} -- true --> BODY["执行体"]
+        BODY --> C2
+        C2 -- false --> FIN["结束"]
+    end
 ```
 
 ## 二、if 判断

@@ -24,13 +24,12 @@
 - 分拣员手里有一张**路由表（Binding 规则）**，写着"地址带 `error` 的信 → 进告警队列""带 `news` 的信 → 进日志队列"。
 - 他照着这张表，把你的信分到对应的格子。
 
-```text
-生产者（你）                   分拣员（Exchange）                收件箱（Queue）
-  发消息 ──────▶  看 routingKey  ──────▶  按 Binding 规则投递
-                  │                            │
-                  │  error  ───────────────▶ 告警队列
-                  │  info   ───────────────▶ 日志队列
-                  │  未知地址 ─────────────▶ 丢弃（没人要的信）
+```mermaid
+flowchart LR
+    P["生产者（你）：发消息"] --> X["交换机 Exchange（分拣员）：看 routingKey"]
+    X -->|"按 Binding 规则投递：error"| Q1["告警队列"]
+    X -->|"按 Binding 规则投递：info"| Q2["日志队列"]
+    X -->|"未知地址，无队列匹配"| Q3["丢弃（没人要的信）"]
 ```
 
 ### 1.2 为什么要有交换机
@@ -84,7 +83,7 @@ void basicPublish(String exchange, String routingKey,
 
 ## 二、六种经典工作模式
 
-下面这六种模式对应 RabbitMQ 官方 Tutorials 的命名。每个模式都给：**原理 + ASCII 图 + 完整 Java 代码**。
+下面这六种模式对应 RabbitMQ 官方 Tutorials 的命名。每个模式都给：**原理 + 架构图 + 完整 Java 代码**
 
 ### 2.1 ① Hello World（简单模式）
 
@@ -376,15 +375,13 @@ public class WorkConsumer {
 
 **一个消息发给所有绑定的队列**——典型"广播"。交换机类型是 `fanout`，它**无视 routingKey**，把消息复制一份丢给所有绑定的队列。
 
-```text
-[Producer] ──basicPublish(fanout_ex, "")──▶ [fanout 交换机]
-                                             │  复制 N 份
-                       ┌─────────────────────┼─────────────────────┐
-                       ▼                                            ▼
-                 [Queue: log.a]                              [Queue: log.b]
-                       ▼                                            ▼
-                 [Consumer A]                                 [Consumer B]
-                 （都收到同一条消息）
+```mermaid
+flowchart TD
+    P["Producer"] -->|"basicPublish(fanout_ex, 空 routingKey)"| X["fanout 交换机：无视 routingKey"]
+    X -->|"复制 N 份"| QA["Queue: log.a"]
+    X -->|"复制 N 份"| QB["Queue: log.b"]
+    QA --> CA["Consumer A（都收到同一条消息）"]
+    QB --> CB["Consumer B（都收到同一条消息）"]
 ```
 
 场景：系统通知（所有用户都要收到）、缓存同步清理（多个缓存节点都要清）。
@@ -503,14 +500,12 @@ public class FanoutConsumer {
 
 **按 routingKey 精确匹配。** 交换机类型是 `direct`：只有当队列绑定的 binding key **完全等于**消息的 routingKey 时，消息才进该队列。
 
-```text
-[Producer] ──basicPublish(direct_ex, "error")──▶ [direct 交换机]
-                                                    │ 精确匹配 binding key
-                       ┌────────────────────────────┼────────────────────────┐
-                       │ binding key="error"        │ binding key="info"      │ binding key="error"
-                       ▼                            ▼                          ▼
-                 [Queue: error_log]          [Queue: all_log]            [Queue: error_alarm]
-                 （error 进）                 （info/error 都进）          （error 进，可告警）
+```mermaid
+flowchart TD
+    P["Producer"] -->|"basicPublish(direct_ex, error)"| X["direct 交换机：精确匹配 binding key"]
+    X -->|"binding key = error"| QA["Queue: error_log（error 进）"]
+    X -->|"binding key = info"| QB["Queue: all_log（info/error 都进）"]
+    X -->|"binding key = error"| QC["Queue: error_alarm（error 进，可告警）"]
 ```
 
 实例：日志系统。`error` 级别的进"告警队列"并存盘，`info` / `warning` 只写普通日志。一个队列可以绑**多个 routingKey**（多重绑定）：
@@ -776,13 +771,17 @@ public class TopicConsumer {
 
 用 MQ 做"请求—响应"：客户端把请求发到队列，带上 `replyTo`（回调队列名）和 `correlationId`（请求唯一标识）；服务端处理完，把结果发回 `replyTo`，客户端按 `correlationId` 对上号。
 
-```text
-[Client] ──发请求(exchange="",routingKey=rpc_queue, replyTo=临时队列, correlationId=UUID)──▶ [rpc_queue]
-                                                                                                    │
-                                                                                              [Server] 处理
-                                                                                                    │ 发回结果
-                                                                                                    ▼
-[Client] ◀──收响应(replyTo 队列, correlationId 匹配)───────────────────────────────────── [临时回调队列]
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant Q as rpc_queue
+    participant S as Server
+    participant CB as 临时回调队列
+    C->>Q: 发请求（exchange 为空，routingKey=rpc_queue，replyTo=临时队列，correlationId=UUID）
+    Q->>S: 投递请求
+    S->>S: 处理
+    S->>CB: 发回结果（replyTo 队列 + correlationId）
+    CB-->>C: 收响应（correlationId 匹配对上号）
 ```
 
 完整客户端：
@@ -1001,24 +1000,20 @@ direct = 精确对号；fanout = 全广播；topic = 带通配符的精确；hea
 
 遇到"该用哪个"时，照着这张图走：
 
-```text
-你要发消息给谁？
-│
-├─ 所有订阅者都要收到同一份？
-│     └─▶ fanout（发布订阅）
-│
-├─ 要按多个维度 / 模糊关键词路由？
-│     ├─ 关键词用 "." 分隔、要通配 → topic（最常用）
-│     └─ 纯键值对匹配（少见）       → headers（不推荐）
-│
-├─ 要按某个具体值精确路由？
-│     └─▶ direct（精确匹配）
-│
-├─ 要把一个任务分给多个 worker 分摊？
-│     └─▶ Work Queues（一个队列 + 多个消费者竞争）
-│
-└─ 只是想 A 调 B 拿个返回值（同步）？
-      └─▶ 别用 MQ！直接用 HTTP / gRPC；非要借 MQ 才用 RPC 模式
+```mermaid
+flowchart TD
+    A{"你要发消息给谁？"} --> B{"所有订阅者都要收到同一份？"}
+    B -->|"是"| R1["fanout（发布订阅）"]
+    B -->|"否"| C{"要按多个维度 / 模糊关键词路由？"}
+    C -->|"是"| C1{"关键词用 . 分隔、要通配？"}
+    C1 -->|"是"| R2["topic（最常用）"]
+    C1 -->|"否，纯键值对匹配（少见）"| R3["headers（不推荐）"]
+    C -->|"否"| D{"要按某个具体值精确路由？"}
+    D -->|"是"| R4["direct（精确匹配）"]
+    D -->|"否"| E{"要把一个任务分给多个 worker 分摊？"}
+    E -->|"是"| R5["Work Queues：一个队列 + 多个消费者竞争"]
+    E -->|"否"| F{"只是想 A 调 B 拿个返回值（同步）？"}
+    F -->|"是"| R6["别用 MQ！直接用 HTTP / gRPC；非要借 MQ 才用 RPC 模式"]
 ```
 
 ## 六、Queue 详解
@@ -1180,33 +1175,16 @@ Producer 直接 basicPublish("不存在的交换机", "key", ...)
 
 ## 九、常见坑清单
 
-```text
-┌──── 交换机与消息模型 · 坑清单 ───────────────────────────────┐
-│ ① 队列没声明就发消息 → 静默丢弃                 │
-│    → 发之前先 queueDeclare / 在 UI 建好         │
-│                                                  │
-│ ② 先启动生产者还是消费者？都能，但队列要先存在   │
-│    → 两边都 queueDeclare 最稳                    │
-│                                                  │
-│ ③ routingKey 写错 → 消息被丢 / 进错队列          │
-│    → UI 看交换机 Incoming 计数；配备用交换机兜底 │
-│                                                  │
-│ ④ 临时队列名随机，消费者重启会新建一个           │
-│    → 临时队列只适合 RPC 回调；业务队列要固定名  │
-│                                                  │
-│ ⑤ basicConsume 后主线程退出 → 收不到消息         │
-│    → 末尾 System.in.read() / CountDownLatch      │
-│                                                  │
-│ ⑥ fanout 下 routingKey 无效，别指望它路由        │
-│    → fanout 一律广播，忽略 routingKey            │
-│                                                  │
-│ ⑦ topic 的 * 和 # 用混                           │
-│    → * 一个词，# 零或多词，词间用 "." 分隔       │
-│                                                  │
-│ ⑧ 想改队列参数 → 406 PRECONDITION_FAILED         │
-│    → 删了重建，或换名字                          │
-└──────────────────────────────────────────────────┘
-```
+| # | 坑 | 正解 |
+| --- | --- | --- |
+| ① | 队列没声明就发消息 → 静默丢弃 | 发之前先 queueDeclare / 在 UI 建好 |
+| ② | 先启动生产者还是消费者？都能，但队列要先存在 | 两边都 queueDeclare 最稳 |
+| ③ | routingKey 写错 → 消息被丢 / 进错队列 | UI 看交换机 Incoming 计数；配备用交换机兜底 |
+| ④ | 临时队列名随机，消费者重启会新建一个 | 临时队列只适合 RPC 回调；业务队列要固定名 |
+| ⑤ | basicConsume 后主线程退出 → 收不到消息 | 末尾 System.in.read() / CountDownLatch |
+| ⑥ | fanout 下 routingKey 无效，别指望它路由 | fanout 一律广播，忽略 routingKey |
+| ⑦ | topic 的 `*` 和 `#` 用混 | `*` 一个词，`#` 零或多词，词间用 `.` 分隔 |
+| ⑧ | 想改队列参数 → 406 PRECONDITION_FAILED | 删了重建，或换名字 |
 
 重点再强调两条：
 

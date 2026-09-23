@@ -663,16 +663,17 @@ public class ApprovalTimeoutScanner {
 
 前端本质是三块：
 
-```text
-┌────────────┐   提交任务    ┌──────────────┐
-│  前端页面   │ ───────────→ │  /api/hitl/run │
-└────────────┘              └──────────────┘
-       ↑                           │ 触发中断
-       │     查询待办              ↓
-       └── GET /api/hitl/approvals ──→ 管理后台表格（待审批列表）
-       │                           │
-       │  点击"通过"               ↓
-       └── POST /api/hitl/approvals/{id} ──→ 恢复执行，返回结果
+```mermaid
+sequenceDiagram
+    participant F as 前端页面
+    participant API as 后端 Run 接口
+    participant AD as 管理后台待审批列表
+    F->>API: 提交任务
+    API-->>AD: 触发中断，生成待审批记录
+    F->>AD: GET 查询待办，渲染待审批表格
+    F->>AD: 点击「通过」，提交审批结果
+    AD->>API: 恢复执行 resume
+    API-->>F: 返回最终 answer
 ```
 
 接入要点：

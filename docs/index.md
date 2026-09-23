@@ -17,6 +17,12 @@ hero:
       text: 运维
       link: /ops/linux/overview
     - theme: alt
+      text: 计算机基础
+      link: /cs/network/overview
+    - theme: alt
+      text: 数据结构与算法
+      link: /cs/dsa/overview
+    - theme: alt
       text: 健身
       link: /fitness/intro
     - theme: alt
@@ -42,6 +48,9 @@ features:
   - title: 做饭
     link: /cooking/intro
     details: 厨房工具与调料清单、火候与刀工基础、看懂菜谱术语，以及按主料分类的家常菜做法与翻车补救。
+  - title: 计算机基础
+    link: /cs/network/overview
+    details: 计算机网络（分层模型、TCP/IP、HTTP/HTTPS 与网络编程排错）、操作系统（进程线程、调度、内存、文件系统、并发与死锁），以及数据结构与算法（线性表、树、哈希、图、排序查找、字符串、高级结构与五大算法思想）三大基础专栏，按篇成体系梳理后端必备底层知识。
   - title: 工具
     link: /ops/vmware/vmware
     details: VMware 虚拟机的安装与使用记录。

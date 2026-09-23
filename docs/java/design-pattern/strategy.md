@@ -55,29 +55,29 @@ public class Cashier {
 
 ## 三、结构与角色
 
-```text
-        ┌─────────────────────┐
-        │      Context        │  上下文（收银员）
-        │  - strategy:Strategy │
-        ├─────────────────────┤
-        │ + setStrategy(s)    │  客户端可随时切换策略
-        │ + execute(price)    │  委托给 strategy
-        └──────────┬──────────┘
-                   │ 持有 / 委托
-                   ▼
-        ┌─────────────────────┐
-        │     <<interface>>   │
-        │      Strategy       │  抽象策略
-        ├─────────────────────┤
-        │ + calc(price):double│
-        └──────────┬──────────┘
-                   │ 实现
-       ┌───────────┼───────────────┐
-       ▼           ▼               ▼
- ┌──────────┐ ┌──────────┐  ┌──────────────┐
- │ Normal   │ │ Silver   │  │   Gold       │  具体策略 A / B / C ...
- │ Strategy │ │ Strategy │  │   Strategy   │
- └──────────┘ └──────────┘  └──────────────┘
+```mermaid
+classDiagram
+    class Context {
+        -Strategy strategy
+        +setStrategy(Strategy s)
+        +execute(double price)
+    }
+    class Strategy {
+        +calc(double price) double
+    }
+    class NormalStrategy {
+        +calc(double price) double
+    }
+    class SilverStrategy {
+        +calc(double price) double
+    }
+    class GoldStrategy {
+        +calc(double price) double
+    }
+    Context o-- Strategy : 持有并可随时切换
+    Strategy <|.. NormalStrategy : 具体策略 A
+    Strategy <|.. SilverStrategy : 具体策略 B
+    Strategy <|.. GoldStrategy : 具体策略 C
 ```
 
 | 角色 | 职责 |

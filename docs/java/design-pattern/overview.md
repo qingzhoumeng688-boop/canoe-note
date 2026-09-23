@@ -95,29 +95,31 @@ GoF（Gang of Four，四人组 Erich Gamma、Richard Helm、Ralph Johnson、John
 
 一个类的方框分三层：类名、属性、方法。可见性符号：`+` 公开（public）、`-` 私有（private）、`#` 受保护（protected）、`~` 包内（package-private）。
 
-```text
-┌──────────────────────┐
-│       UserService    │   ← 类名（抽象类用 斜体 或 《abstract》）
-├──────────────────────┤
-│ - username: String   │   ← 属性，- 表示 private
-│ # retryCount: int    │   ← # 表示 protected
-├──────────────────────┤
-│ + login(): boolean   │   ← 方法，+ 表示 public
-│ - sendSms(): void    │
-└──────────────────────┘
+```mermaid
+classDiagram
+    class UserService {
+        -String username
+        #int retryCount
+        +login() boolean
+        -sendSms() void
+    }
 ```
 
 ### 2. 六种关系（最易混的是聚合 vs 组合）
 
-下面用 ASCII 图 + 一句话 + Java 对照，把六种关系一次讲清。
+下面用类图 + 一句话 + Java 对照，把六种关系一次讲清。
 
 **(1) 依赖 Dependency（虚线箭头）**——"我用一下你，但你不归我管。"
 
-```text
- ┌──────────┐         ┌──────────┐
- │  Order   │ - - -▷  │  Logger  │
- └──────────┘         └──────────┘
-   Logger 只出现在 Order 的方法参数/局部变量里
+```mermaid
+classDiagram
+    class Order {
+        +pay(Logger)
+    }
+    class Logger {
+        +info(String)
+    }
+    Order ..> Logger : 依赖，只出现在方法参数 / 局部变量里
 ```
 
 ```java
@@ -133,11 +135,16 @@ public class Order {
 
 **(2) 关联 Association（实线箭头）**——"我长期认识你，把你当成成员变量。"
 
-```text
- ┌──────────┐         ┌──────────┐
- │  Teacher │──────▷  │  Student │
- └──────────┘         └──────────┘
-   Teacher 持有 Student 的引用（成员变量）
+```mermaid
+classDiagram
+    class Teacher {
+        -Student student
+        +teach()
+    }
+    class Student {
+        +study()
+    }
+    Teacher --> Student : 关联，长期持有引用
 ```
 
 ```java
@@ -151,11 +158,14 @@ public class Teacher {
 
 **(3) 聚合 Aggregation（空心菱形 + 实线）**——"整体由部分组成的**has-a**，但**部分能脱离整体独立活**。"
 
-```text
- ┌──────────┐      ◇────┌──────────┐
- │  Team    │─────────  │  Member  │
- └──────────┘           └──────────┘
-   Team 解散了，Member 依然是独立的个人，可以加入别的 Team
+```mermaid
+classDiagram
+    class Team {
+        -List~Member~ members
+        +addMember(Member)
+    }
+    class Member
+    Team o-- Member : 聚合，Team 没了 Member 仍可独立存在
 ```
 
 ```java
@@ -176,11 +186,13 @@ public class Team {
 
 **(4) 组合 Composition（实心菱形 + 实线）**——"整体**contains-a**部分，**整体死了部分也跟着死**，生命周期绑定。"
 
-```text
- ┌──────────┐      ◆────┌──────────┐
- │  Human   │─────────  │  Heart   │
- └──────────┘           └──────────┘
-   Human 没了，Heart 也失去意义（同生共死）
+```mermaid
+classDiagram
+    class Human {
+        -Heart heart
+    }
+    class Heart
+    Human *-- Heart : 组合，同生共死
 ```
 
 ```java
@@ -200,13 +212,11 @@ class Heart { }
 
 **(5) 泛化 Generalization（实线空心三角）**——就是"继承"，子类是父类的一种。
 
-```text
- ┌──────────┐    △
- │  Animal  │────
- └──────────┘    │
-              ┌──┴─────┐
-              │  Dog   │   Dog 继承 Animal
-              └────────┘
+```mermaid
+classDiagram
+    class Animal
+    class Dog
+    Animal <|-- Dog : 泛化，继承
 ```
 
 ```java
@@ -218,13 +228,15 @@ public class Dog extends Animal {   // 泛化 = 继承
 
 **(6) 实现 Realization（虚线空心三角）**——类实现接口。
 
-```text
- ┌──────────┐    △
- │ Runnable │- - -
- └──────────┘    │
-              ┌──┴─────┐
-              │  Task  │   Task 实现 Runnable
-              └────────┘
+```mermaid
+classDiagram
+    class Runnable {
+        +run()
+    }
+    class Task {
+        +run()
+    }
+    Runnable <|.. Task : 实现
 ```
 
 ```java
@@ -242,22 +254,15 @@ public class Task implements Runnable {   // 实现 = 虚线三角
 
 按这个顺序学，坡度最缓、收益最快：
 
-```text
-第 1 步  单例（最简单，先建立"模式感"）
-   ↓
-第 2 步  工厂方法 + 抽象工厂（理解"怎么藏 new"）
-   ↓
-第 3 步  策略 + 模板方法（消灭 if-else、复用流程）
-   ↓
-第 4 步  观察者 + 责任链（对象如何协作通信）
-   ↓
-第 5 步  代理 + 装饰器 + 适配器（结构型三巨头，容易混，放一起对比学）
-   ↓
-第 6 步  桥接 + 组合 + 外观 + 建造者（补全结构型）
-   ↓
-第 7 步  命令 + 状态 + 迭代器（常用行为型）
-   ↓
-第 8 步  享元 / 中介者 / 访问者 / 备忘录 / 解释器（低频，按需补）
+```mermaid
+flowchart TD
+    S1["第 1 步：单例（最简单，先建立模式感）"] --> S2["第 2 步：工厂方法 + 抽象工厂（理解怎么藏 new）"]
+    S2 --> S3["第 3 步：策略 + 模板方法（消灭 if-else、复用流程）"]
+    S3 --> S4["第 4 步：观察者 + 责任链（对象如何协作通信）"]
+    S4 --> S5["第 5 步：代理 + 装饰器 + 适配器（结构型三巨头，容易混，放一起对比学）"]
+    S5 --> S6["第 6 步：桥接 + 组合 + 外观 + 建造者（补全结构型）"]
+    S6 --> S7["第 7 步：命令 + 状态 + 迭代器（常用行为型）"]
+    S7 --> S8["第 8 步：享元 / 中介者 / 访问者 / 备忘录 / 解释器（低频，按需补）"]
 ```
 
 **三条硬建议：**

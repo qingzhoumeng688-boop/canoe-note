@@ -45,21 +45,28 @@ public class BadBookShelf {
 
 ## 三、结构与角色
 
-```text
-        ┌──────────────────────┐             ┌──────────────────────┐
-        │      Aggregate       │             │      Iterator        │
-        │  (集合接口)           │             │  (迭代器接口)         │
-        │  + iterator():Iterator│             │  + hasNext():boolean │
-        └──────────┬───────────┘             │  + next():Object     │
-                   │ 返回                      └──────────▲───────────┘
-                   │                                    │ implements
-                   │                           ┌────────┴─────────┐
-        ┌──────────┴───────────┐             │ BookShelfIterator │
-        │      BookShelf       │◀──持有──────│ (具体迭代器)       │
-        │  (具体集合)           │    current  │ - index:int       │
-        │  - books:List<Book>  │             │ + hasNext()       │
-        │  + iterator()        │             │ + next()          │
-        └──────────────────────┘             └────────────────────┘
+```mermaid
+classDiagram
+    class Aggregate {
+        +iterator() Iterator
+    }
+    class BookShelf {
+        -List books
+        +iterator() Iterator
+    }
+    class Iterator {
+        +hasNext() boolean
+        +next() Object
+    }
+    class BookShelfIterator {
+        -int index
+        +hasNext() boolean
+        +next() Object
+    }
+    Aggregate <|.. BookShelf : 具体集合
+    Aggregate ..> Iterator : 返回迭代器
+    Iterator <|.. BookShelfIterator : 具体迭代器
+    BookShelf ..> BookShelfIterator : 创建并持有当前位置
 ```
 
 | 角色 | 对应类 | 职责 |

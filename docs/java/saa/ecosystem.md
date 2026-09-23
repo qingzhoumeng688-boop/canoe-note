@@ -36,17 +36,15 @@
 
 ### 1.2 依赖方向再确认
 
-```text
-你的业务代码
-    │  使用
-    ▼
-Spring AI Alibaba（ReactAgent / Graph / 阿里扩展）
-    │  依赖（复用其抽象）
-    ▼
-Spring AI（ChatModel / Tool / VectorStore / Message）
-    │  依赖
-    ▼
-大模型 HTTP API（百炼 DashScope / OpenAI / DeepSeek …）
+```mermaid
+flowchart TD
+    A["你的业务代码"]
+    B["Spring AI Alibaba：ReactAgent / Graph / 阿里扩展"]
+    C["Spring AI：ChatModel / Tool / VectorStore / Message"]
+    D["大模型 HTTP API：百炼 DashScope / OpenAI / DeepSeek"]
+    A -->|"使用"| B
+    B -->|"依赖（复用其抽象）"| C
+    C -->|"依赖"| D
 ```
 
 因此：**升级 Spring AI 版本时，SAA 必须同步升级到与之匹配的版本**（见第三节对照表）。反过来，想用某个 SAA 新特性，得先确认它依赖的 Spring AI 版本你的项目能不能接受。

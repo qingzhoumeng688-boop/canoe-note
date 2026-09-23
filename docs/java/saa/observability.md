@@ -274,14 +274,21 @@ management:
 
 Trace（链路）是由一个个 **Span（跨度）** 组成的树。一次用户提问产生一条 Trace：
 
-```text
-Trace: 用户问"我们公司的年假政策是什么"
-└─ Span: agent.chat（父，你手动包的，总耗时 8.2s）
-   ├─ Span: chat（第 1 次模型调用：让模型判断是否要查知识库，0.9s）
-   ├─ Span: db.vector.query（RAG 检索，命中 3 篇文档，0.3s）   ← 向量库
-   ├─ Span: chat（第 2 次模型调用：带着上下文生成回答，1.1s）
-   └─ Span: tool（模型决定调"查 hr 系统"工具，2.4s）           ← 工具调用
-      └─ Span: http（工具内部真正打 hr 系统的 HTTP 调用，2.2s）
+```mermaid
+flowchart TD
+    T["Trace：用户问「我们公司的年假政策是什么」"]
+    A["Span agent.chat（父 Span，你手动包的，总耗时 8.2s）"]
+    B["Span chat：第 1 次模型调用，判断是否要查知识库（0.9s）"]
+    C["Span db.vector.query：RAG 检索，命中 3 篇文档（0.3s）"]
+    D["Span chat：第 2 次模型调用，带上下文生成回答（1.1s）"]
+    E["Span tool：模型决定调「查 hr 系统」工具（2.4s）"]
+    F["Span http：工具内部真正打 hr 系统的 HTTP 调用（2.2s）"]
+    T --> A
+    A --> B
+    A --> C
+    A --> D
+    A --> E
+    E --> F
 ```
 
 父 Span 的总耗时 = 所有子 Span 之和。这样你一眼就能看出：**这次回答慢，瓶颈在"查 hr 系统"那个工具**，而不是模型本身。这正是 Trace 比单纯看"接口耗时"强的地方。

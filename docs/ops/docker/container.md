@@ -6,27 +6,17 @@
 
 ### 1.1 状态流转图
 
-```text
-                    docker create                  docker start
-      [镜像]     ────────────────►   Created   ──────────────────►   Running
-                                       │  ▲                            │  ▲
-                                       │  │                            │  │
-                       docker rm       │  │  docker create             │  │ docker unpause
-                                       │  │                            │  │
-                                       ▼  │                            ▼  │
-                                   [已删除]                          Paused │
-                                                                          │
-                     docker stop / docker kill / 主进程结束                 │ docker pause
-                                       │                                  │
-                                       ▼                                  │
-                                    Exited  ◄─────────────────────────────┘
-                                       │
-                       docker start（重新启动，数据还在）
-                                       │
-                                       ▼
-                                    Running
-
-   docker run = docker pull(如需) + docker create + docker start
+```mermaid
+flowchart TD
+    IMG["镜像"] -->|"docker create"| CR["Created"]
+    CR -->|"docker start"| RUN["Running"]
+    RUN -->|"docker stop / docker kill / 主进程结束"| EX["Exited"]
+    RUN -->|"docker pause"| PA["Paused"]
+    PA -->|"docker unpause"| RUN
+    EX -->|"docker start（重新启动，数据还在）"| RUN
+    CR -->|"docker rm"| DEL["已删除"]
+    EX -->|"docker rm"| DEL
+    NOTE["docker run = docker pull(如需) + docker create + docker start"]
 ```
 
 ### 1.2 七种状态

@@ -31,13 +31,20 @@
 
 把「全能 Agent」拆成「专精 Agent」组队：
 
-```text
-单 Agent（容易爆）              多 Agent（分道扬镳）
-┌──────────────┐              ┌─────────┐ ┌─────────┐ ┌─────────┐
-│  全能 Agent   │              │ 写作Agent│ │ 评审Agent│ │ 翻译Agent│
-│ 写+审+译+查   │    ──拆──▶   └─────────┘ └─────────┘ └─────────┘
-│ 工具 20 个    │              各管一件事，各挂 2~3 个工具
-└──────────────┘              上下文隔离，互不污染
+```mermaid
+flowchart LR
+    subgraph SINGLE["单 Agent（容易爆）"]
+        A1["全能 Agent：写 + 审 + 译 + 查"]
+        A2["工具 20 个，上下文互相污染"]
+    end
+    subgraph MULTI["多 Agent（分道扬镳）"]
+        B1["写作 Agent"]
+        B2["评审 Agent"]
+        B3["翻译 Agent"]
+        B4["各管一件事，各挂 2~3 个工具"]
+        B5["上下文隔离，互不污染"]
+    end
+    SINGLE -->|"拆分"| MULTI
 ```
 
 三个好处：**专业化分工**、**上下文隔离省 Token**、**单点失败不影响全局**。
@@ -667,13 +674,14 @@ Handoffs 与 Tool Calling 的区别：**Tool Calling 里子 Agent 不直接见�
 | **LlmRoutingAgent** | LLM 当前台分诊 | 问题种类多、需分流 | 只有 1~2 类问题或规则能判断 |
 | **SupervisorAgent** | 大总管动态调度 | 复杂多步骤协作 | 直线流程（Sequential）或简单分流（Routing） |
 
-```text
-任务需要多个 Agent 协作？
-├─ 有明确顺序？        → SequentialAgent
-├─ 能并行且独立？      → ParallelAgent
-├─ 要反复迭代？        → LoopAgent
-├─ 按输入动态选一个？  → LlmRoutingAgent
-└─ 复杂多步、来回调度？ → SupervisorAgent
+```mermaid
+flowchart TD
+    Q{"任务需要多个 Agent 协作？"}
+    Q -->|"有明确顺序"| A["SequentialAgent"]
+    Q -->|"能并行且独立"| B["ParallelAgent"]
+    Q -->|"要反复迭代"| C["LoopAgent"]
+    Q -->|"按输入动态选一个"| D["LlmRoutingAgent"]
+    Q -->|"复杂多步、来回调度"| E["SupervisorAgent"]
 ```
 
 ## 九、调试与观测建议

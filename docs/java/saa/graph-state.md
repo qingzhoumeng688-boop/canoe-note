@@ -42,14 +42,19 @@
 - 节点 B 启动时，从背包里翻出 `llm_answer` 格子，拿去用。
 - 谁都不用知道上游是谁，只认"背包里的格子名"。**节点之间彻底解耦。**
 
-```text
-        ┌─────────── OverAllState（背包）───────────┐
-        │  user_input: "你好"                        │
-        │  normalized_input: "你好"                  │
-        │  llm_answer: "你好！有什么可以帮你？"        │
-        └───────────────────────────────────────────┘
-              ▲ 写                ▲ 读        ▲ 写
-          normalize            call_llm    save
+```mermaid
+flowchart TD
+    subgraph S["OverAllState（背包 / 黑板）"]
+        K1["user_input：你好"]
+        K2["normalized_input：你好"]
+        K3["llm_answer：你好！有什么可以帮你？"]
+    end
+    N1["normalize 节点"]
+    N2["call_llm 节点"]
+    N3["save 节点"]
+    N1 -->|"写"| S
+    S -->|"读"| N2
+    N3 -->|"写"| S
 ```
 
 ### 怎么读、怎么写

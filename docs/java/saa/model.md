@@ -28,24 +28,21 @@
 
 用图表示它们的分工：
 
-```text
-你写的业务代码
-     │
-     ▼
-┌─────────────────────────────────────────┐
-│  ChatClient（门面 / 编排者）              │
-│   · 组织 system / user 提示词            │
-│   · 拼接历史对话（ChatMemory）           │
-│   · 在调用前后插入 Advisor（日志/重试/RAG）│
-│   · 把返回文本转成对象 / 流式输出         │
-└───────────────────┬─────────────────────┘
-                    │ 最终仍然是一句话：请模型补全
-                    ▼
-┌─────────────────────────────────────────┐
-│  ChatModel（裸模型接口）                  │
-│   · 只做一件事：接收 Prompt，返回 ChatResponse│
-│   · 可以是 DashScope / OpenAI / DeepSeek   │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["你写的业务代码"]
+    subgraph CC["ChatClient（门面 / 编排者）"]
+        C1["组织 system / user 提示词"]
+        C2["拼接历史对话 ChatMemory"]
+        C3["在调用前后插入 Advisor（日志 / 重试 / RAG）"]
+        C4["把返回文本转成对象 / 流式输出"]
+    end
+    subgraph CM["ChatModel（裸模型接口）"]
+        M1["只做一件事：接收 Prompt，返回 ChatResponse"]
+        M2["可以是 DashScope / OpenAI / DeepSeek"]
+    end
+    A --> CC
+    CC -->|"最终仍然是一句话：请模型补全"| CM
 ```
 
 ::: tip 一句话记住

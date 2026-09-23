@@ -17,18 +17,19 @@
 
 ### 1.1 完整的请求流程
 
-```text
-你的程序                                        大模型服务
-   │                                              │
-   │  ① 组装 JSON：模型名 + 历史消息 + 参数          │
-   │  ② 加上 Authorization 请求头（API Key）        │
-   │─────────────── HTTP POST ──────────────────→  │
-   │                                              │  ③ 鉴权、计费额度检查
-   │                                              │  ④ Token 化（把文字切成 token）
-   │                                              │  ⑤ 模型推理：逐个预测下一个 token
-   │                                              │  ⑥ 生成完毕，统计用量
-   │←──────────────  HTTP 200 + JSON  ─────────────│
-   │  ⑦ 解析 JSON，取出 content                     │
+```mermaid
+sequenceDiagram
+    participant App as 你的程序
+    participant LLM as 大模型服务
+    App->>App: ① 组装 JSON：模型名 + 历史消息 + 参数
+    App->>App: ② 加上 Authorization 请求头（API Key）
+    App->>LLM: HTTP POST 发送请求
+    LLM->>LLM: ③ 鉴权、计费额度检查
+    LLM->>LLM: ④ Token 化（把文字切成 token）
+    LLM->>LLM: ⑤ 模型推理：逐个预测下一个 token
+    LLM->>LLM: ⑥ 生成完毕，统计用量
+    LLM-->>App: HTTP 200 + JSON 返回
+    App->>App: ⑦ 解析 JSON，取出 content
 ```
 
 **关键认知：这个过程是同步阻塞的。** 模型的回答是一个 token 一个 token 生成的，通常要几秒甚至几十秒。所以：

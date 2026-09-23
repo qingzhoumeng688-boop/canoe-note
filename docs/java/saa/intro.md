@@ -102,27 +102,25 @@ SAA 从架构上分为三层，从上往下依次是：**Agent Framework 层 →
 
 下面这张图把三层和它们各自的职责、你日常接触的频度画出来（注意箭头方向：**上层依赖下层**）：
 
-```text
-                         你的业务应用（客服 / 问数 / 审批 / 运维助手 …）
-                                       │
-       ┌───────────────────────────────┴───────────────────────────────┐
-       │                      Agent Framework 层                         │   ← 绝大多数场景从这里开始
-       │   ReactAgent / SequentialAgent / ParallelAgent / RoutingAgent   │
-       │   内置：上下文工程、人机协同(HITL)、工具检索、迭代限制 …          │
-       └───────────────────────────────┬───────────────────────────────┘
-                                       │  ReactAgent 实际运行在 Graph 之上
-       ┌───────────────────────────────┴───────────────────────────────┐
-       │                       Graph Runtime 层                         │   ← 需要精确控制流程时接触
-       │   StateGraph / 节点与边 / MemorySaver(持久化) / RunnableConfig   │
-       │   提供：状态管理、条件分支、并行、断点恢复、流式                     │
-       └───────────────────────────────┬───────────────────────────────┘
-                                       │  依赖
-       ┌───────────────────────────────┴───────────────────────────────┐
-       │                   Augmented LLM 原子能力层                      │   ← 来自 Spring AI
-       │   ChatModel / Tool / VectorStore / MCP / Message / ChatMemory    │
-       └───────────────────────────────────────────────────────────────┘
-                                       │
-                              底层：大模型（qwen-plus 等）
+```mermaid
+flowchart TD
+    BIZ["你的业务应用（客服 / 问数 / 审批 / 运维助手）"]
+    subgraph AF["Agent Framework 层 —— 绝大多数场景从这里开始"]
+        AF1["ReactAgent / SequentialAgent / ParallelAgent / RoutingAgent"]
+        AF2["内置：上下文工程、人机协同 HITL、工具检索、迭代限制"]
+    end
+    subgraph GR["Graph Runtime 层 —— 需要精确控制流程时接触"]
+        GR1["StateGraph / 节点与边 / MemorySaver 持久化 / RunnableConfig"]
+        GR2["提供：状态管理、条件分支、并行、断点恢复、流式"]
+    end
+    subgraph AL["Augmented LLM 原子能力层 —— 来自 Spring AI"]
+        AL1["ChatModel / Tool / VectorStore / MCP / Message / ChatMemory"]
+    end
+    LM["底层：大模型（qwen-plus 等）"]
+    BIZ --> AF
+    AF -->|"ReactAgent 实际运行在 Graph 之上"| GR
+    GR -->|"依赖"| AL
+    AL --> LM
 ```
 
 ### 三层职责对照表
@@ -300,13 +298,15 @@ public class AgentFrameworkDemo {
 
 `ReactAgent` 背后做的事，本质上是一张只有几个节点的有向图：
 
-```text
-   ┌─────────────────────────────────────────────────────┐
-   │  (1) 思考：模型根据当前状态决定"下一步做什么"          │
-   │  (2) 行动：如果要调工具 → 执行 ToolCallback           │
-   │  (3) 观察：把工具结果写回状态                          │
-   │  (4) 判断：任务完成就 END，否则回到 (1) 继续循环       │
-   └─────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    A["(1) 思考：模型根据当前状态决定下一步做什么"]
+    B["(2) 行动：如果要调工具 → 执行 ToolCallback"]
+    C["(3) 观察：把工具结果写回状态"]
+    D{"(4) 判断：任务是否完成"}
+    A --> B --> C --> D
+    D -->|"未完成，回到思考继续循环"| A
+    D -->|"完成，走向 END"| E["END"]
 ```
 
 `ReactAgent.builder()` 在 `build()` 时，会把上面这套循环编译成一张 `StateGraph`：思考节点、工具节点、条件边（"要不要继续"）一应俱全。之后每次 `agent.call(...)`，就是让这张图跑一轮。

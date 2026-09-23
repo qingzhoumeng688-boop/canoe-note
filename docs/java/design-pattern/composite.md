@@ -67,25 +67,28 @@ public class BadClient {
 
 ## 三、结构与角色
 
-```text
-            ┌─────────────────┐
-            │  CompanyNode    │ ← 抽象构件 Component（叶子与容器共同接口）
-            │  (抽象节点)     │
-            └────────┬────────┘
-                     │ 实现
-          ┌──────────┴──────────┐
-          │                     │
-   ┌──────┴──────┐      ┌───────┴────────┐
-   │   Employee  │      │   Department    │ ← 容器构件 Composite
-   │ (叶子节点)  │      │  (容器/分支节点) │
-   │ 返回自身薪资│      │ 持有子节点列表    │
-   └─────────────┘      │ 递归汇总子节点   │
-                        └───────┬────────┘
-                                │ 持有
-                        ┌───────┴────────┐
-                        │  子 CompanyNode │
-                        │ (员工 或 子部门) │
-                        └────────────────┘
+```mermaid
+classDiagram
+    class CompanyNode {
+        +add(CompanyNode node)
+        +remove(CompanyNode node)
+        +getSalary() int
+        +print(String indent)
+    }
+    class Employee {
+        -String name
+        -int salary
+        +getSalary() int
+    }
+    class Department {
+        -List children
+        +add(CompanyNode node)
+        +remove(CompanyNode node)
+        +getSalary() int
+    }
+    CompanyNode <|.. Employee : 叶子构件
+    CompanyNode <|.. Department : 容器构件
+    Department o-- CompanyNode : 持有子节点
 ```
 
 | 角色 | 对应类 | 职责 |

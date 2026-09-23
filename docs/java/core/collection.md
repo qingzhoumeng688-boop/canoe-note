@@ -6,19 +6,34 @@
 
 整个集合框架分两大套：**Collection（单列，存元素）**和 **Map（双列，存 key-value）**。
 
-```text
-java.util.Collection                        java.util.Map
-├── List（有序、可重复、有索引）            ├── HashMap（数组+链表+红黑树，最常用）
-│   ├── ArrayList（数组，查快改慢）         ├── LinkedHashMap（保持插入顺序）
-│   ├── LinkedList（双向链表，改快查慢）     ├── TreeMap（按 key 排序，红黑树）
-│   └── Vector（线程安全，已过时）          ├── Hashtable（线程安全，已过时）
-├── Set（无序、不可重复）                    └── ConcurrentHashMap（高并发）
-│   ├── HashSet（基于 HashMap）
-│   ├── LinkedHashSet（保持插入顺序）
-│   └── TreeSet（排序，红黑树）
-└── Queue / Deque（队列/双端队列）
-    ├── ArrayDeque（推荐替代 Stack）
-    └── PriorityQueue（堆，优先级）
+```mermaid
+flowchart TD
+    C0["java.util.Collection"]
+    M0["java.util.Map"]
+
+    L["List（有序、可重复、有索引）"]
+    S["Set（无序、不可重复）"]
+    Q["Queue / Deque（队列 / 双端队列）"]
+    C0 --> L
+    C0 --> S
+    C0 --> Q
+
+    L --> A1["ArrayList（数组，查快改慢）"]
+    L --> A2["LinkedList（双向链表，改快查慢）"]
+    L --> A3["Vector（线程安全，已过时）"]
+
+    S --> B1["HashSet（基于 HashMap）"]
+    S --> B2["LinkedHashSet（保持插入顺序）"]
+    S --> B3["TreeSet（排序，红黑树）"]
+
+    Q --> C1["ArrayDeque（推荐替代 Stack）"]
+    Q --> C2["PriorityQueue（堆，优先级）"]
+
+    M0 --> D1["HashMap（数组+链表+红黑树，最常用）"]
+    M0 --> D2["LinkedHashMap（保持插入顺序）"]
+    M0 --> D3["TreeMap（按 key 排序，红黑树）"]
+    M0 --> D4["Hashtable（线程安全，已过时）"]
+    M0 --> D5["ConcurrentHashMap（高并发）"]
 ```
 
 记住：**Collection 管「装什么」，Map 管「键值对」**。接口与实现类分离，这是面向接口编程的好例子——业务里尽量写 `List<T>` 而不是 `ArrayList<T>`，方便以后换实现。

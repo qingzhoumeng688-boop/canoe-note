@@ -47,21 +47,37 @@ public class WeatherStation {
 
 ## 三、结构与角色
 
-```text
-        ┌────────────────────────┐         ┌────────────────────────┐
-        │      Subject           │         │    Observer (interface) │
-        │  <<interface>>         │         │    <<interface>>        │
-        ├────────────────────────┤         ├────────────────────────┤
-        │ + register(o)          │◄────────│ + update(subject,data)  │
-        │ + remove(o)            │   持有   └───────────┬────────────┘
-        │ + notifyObservers()    │        实现           │
-        └───────────┬────────────┘         ┌────────────┼────────────┐
-                    │                       ▼            ▼            ▼
-            ┌───────┴─────────┐     ┌────────────┐ ┌──────────┐ ┌──────────┐
-            │ ConcreteSubject │     │ PhoneDisplay│ │ TvDisplay│ │WebDisplay│
-            │ (气象站)         │     │ (观察者A)   │ │ (观察者B)│ │ (观察者C)│
-            │ - observers:List │     └────────────┘ └──────────┘ └──────────┘
-            └──────────────────┘
+```mermaid
+classDiagram
+    class Subject {
+        +register(Observer o)
+        +remove(Observer o)
+        +notifyObservers()
+    }
+    class ConcreteSubject {
+        -List observers
+        -int temperature
+        +register(Observer o)
+        +remove(Observer o)
+        +notifyObservers()
+    }
+    class Observer {
+        +update(Subject subject, Object data)
+    }
+    class PhoneDisplay {
+        +update(Subject subject, Object data)
+    }
+    class TvDisplay {
+        +update(Subject subject, Object data)
+    }
+    class WebDisplay {
+        +update(Subject subject, Object data)
+    }
+    Subject <|.. ConcreteSubject : 气象站
+    Subject o-- Observer : 持有观察者列表
+    Observer <|.. PhoneDisplay : 观察者A
+    Observer <|.. TvDisplay : 观察者B
+    Observer <|.. WebDisplay : 观察者C
 ```
 
 | 角色 | 职责 |

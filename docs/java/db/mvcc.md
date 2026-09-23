@@ -40,15 +40,13 @@ InnoDB 每行数据除了你定义的列，还偷偷加了三个隐藏字段：
 | `DB_ROLL_PTR` | **回滚指针**，指向 undo log 里的上一个版本 |
 | `DB_ROW_ID` | 隐藏主键（没显式主键时由它充当聚簇索引） |
 
-```text
-┌──────────────────────────────────────────────┐
-│  user 表的一行真实数据（聚簇索引叶子）          │
-├──────────┬──────────┬───────────────────────┤
-│ 你的列    │ DB_TRX_ID│ DB_ROLL_PTR → 指向 undo │
-│ id=1      │ = trx_20 │  log 中的旧版本         │
-│ name=张三 │          │                       │
-│ age=20    │          │ DB_ROW_ID（无主键时）  │
-└──────────┴──────────┴───────────────────────┘
+```mermaid
+flowchart TD
+    ROW["user 表的一行真实数据（聚簇索引叶子）"]
+    ROW --> C1["你定义的列：id=1、name=张三、age=20"]
+    ROW --> C2["DB_TRX_ID = trx_20：最后修改这行的事务 ID"]
+    ROW --> C3["DB_ROLL_PTR：回滚指针，指向 undo log 中的旧版本"]
+    ROW --> C4["DB_ROW_ID：隐藏主键（无显式主键时充当聚簇索引）"]
 ```
 
 ## 四、undo log 版本链
@@ -63,17 +61,15 @@ InnoDB 每行数据除了你定义的列，还偷偷加了三个隐藏字段：
 
 版本链演化如下（每版都带自己的 trx_id 和指向上一版的 roll_ptr）：
 
-```text
-最新版 (trx_30, age=25, name=李四)
-   │ roll_ptr
-   ▼
-旧版2 (trx_20, name=李四, age=21)        ← 改 name 时 age 还是 21
-   │ roll_ptr
-   ▼
-旧版1 (trx_10, age=21, name=张三)        ← 改 age 时 name 还是 张三
-   │ roll_ptr
-   ▼
-初始版 (trx_1,  age=20, name=张三)       ← 最早插入的版本
+```mermaid
+flowchart TD
+    V3["最新版（trx_30，age=25，name=李四）"]
+    V2["旧版2（trx_20，name=李四，age=21）：改 name 时 age 还是 21"]
+    V1["旧版1（trx_10，age=21，name=张三）：改 age 时 name 还是 张三"]
+    V0["初始版（trx_1，age=20，name=张三）：最早插入的版本"]
+    V3 -->|"roll_ptr"| V2
+    V2 -->|"roll_ptr"| V1
+    V1 -->|"roll_ptr"| V0
 ```
 
 当某事务要"读历史版本"时，就从链头出发，顺着 roll_ptr 一路往前找，直到找到"对自己可见"的那个版本为止。这就是 MVCC 取数据的本质：**在版本链上挑一个可见的旧版本**。
@@ -98,16 +94,18 @@ InnoDB 每行数据除了你定义的列，还偷偷加了三个隐藏字段：
    - **在 m_ids 里**（还活跃未提交）→ **不可见**，顺着版本链往前找；
    - **不在 m_ids 里**（已提交）→ **可见**。
 
-```text
-       判断某版本 trx_id 是否可见
-                 │
-   ┌─────────────┼─────────────────────┐
-   ▼             ▼                     ▼
-等于自己?      < min_trx_id?     在 [min,max) 区间?
-   │             │                     │
- 可见          可见(已提交)      在 m_ids? ─┬─ 是 → 不可见, 往前找
-                                           └─ 否 → 可见(已提交)
-                              >= max_trx_id? → 不可见(未来事务)
+```mermaid
+flowchart TD
+    S["拿某版本的 trx_id 判断可见性"]
+    S --> D1{"trx_id 等于 creator_trx_id？"}
+    D1 -- 是 --> R1["可见：本事务自己改的"]
+    D1 -- 否 --> D2{"trx_id 小于 min_trx_id？"}
+    D2 -- 是 --> R2["可见：该事务在我生成 ReadView 前已提交"]
+    D2 -- 否 --> D3{"trx_id 大于等于 max_trx_id？"}
+    D3 -- 是 --> R3["不可见：未来事务，我之后才开启"]
+    D3 -- 否 --> D4{"trx_id 在 m_ids 里？"}
+    D4 -- 是 --> R4["不可见：事务仍活跃未提交，顺版本链往前找"]
+    D4 -- 否 --> R5["可见：事务已提交"]
 ```
 
 顺着版本链一路应用这套规则，第一个"可见"的版本就是该事务应该读到的数据。
@@ -121,18 +119,28 @@ InnoDB 每行数据除了你定义的列，还偷偷加了三个隐藏字段：
 
 带时序的对比示例（初始 `user id=1, age=20`）：
 
-```text
-===== RC 下（每次快照读都新建 ReadView）=====
-T1: 事务A SELECT age → 生成RV1，看到 age=20
-T2: 事务B UPDATE age=21; COMMIT
-T3: 事务A 再 SELECT age → 生成RV2（新RV），B已提交不在m_ids → 看到 age=21
-    → 两次读不一致 ❌ 不可重复读
+```mermaid
+sequenceDiagram
+    participant A as 事务A
+    participant B as 事务B
+    Note over A,B: RC 下：每次快照读都新建 ReadView
+    A->>A: T1 SELECT age：生成 RV1，读到 age=20
+    B->>B: T2 UPDATE age=21
+    B->>B: T2 COMMIT
+    A->>A: T3 再 SELECT age：生成 RV2（新 ReadView），B 已提交不在 m_ids，读到 age=21
+    Note over A: 两次读不一致，出现不可重复读
+```
 
-===== RR 下（复用同一个 ReadView）=====
-T1: 事务A SELECT age → 生成RV1（m_ids含B），看到 age=20
-T2: 事务B UPDATE age=21; COMMIT
-T3: 事务A 再 SELECT age → 复用RV1，B的trx_id在m_ids(虽已提交但RV记录的是"当时活跃")
-    → 顺着版本链找到"对RV1可见"的旧版 → 仍看到 age=20 ✅ 可重复读
+```mermaid
+sequenceDiagram
+    participant A as 事务A
+    participant B as 事务B
+    Note over A,B: RR 下：复用同一个 ReadView
+    A->>A: T1 SELECT age：生成 RV1，m_ids 含 B，读到 age=20
+    B->>B: T2 UPDATE age=21
+    B->>B: T2 COMMIT
+    A->>A: T3 再 SELECT age：复用 RV1，沿版本链找对 RV1 可见的旧版，仍读到 age=20
+    Note over A: 两次读一致，实现可重复读
 ```
 
 注意 RR 下"可重复读"的精髓：**不是数据没变，而是你的 ReadView 一直没换，所以永远读到同一个历史快照。**

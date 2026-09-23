@@ -176,18 +176,23 @@
 
 把整件事分层看，会更清楚你要学什么：
 
-```text
-┌─────────────────────────────────────────────────┐
-│  应用层       你的业务：客服、问数、审批、运维助手    │  ← 你写的大部分代码
-├─────────────────────────────────────────────────┤
-│  框架层       Spring AI Alibaba / Spring AI      │  ← 本专栏核心
-│              LangChain4j（旁支）                  │
-├─────────────────────────────────────────────────┤
-│  数据层       Elasticsearch（向量库）              │
-│              业务 DB、第三方 API、MCP 服务         │
-├─────────────────────────────────────────────────┤
-│  模型层       通义千问 DashScope / OpenAI / DeepSeek│
-└─────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph L1["应用层 —— 你写的大部分代码"]
+        A1["你的业务：客服 / 问数 / 审批 / 运维助手"]
+    end
+    subgraph L2["框架层 —— 本专栏核心"]
+        B1["Spring AI Alibaba / Spring AI"]
+        B2["LangChain4j（旁支）"]
+    end
+    subgraph L3["数据层"]
+        C1["Elasticsearch（向量库）"]
+        C2["业务 DB、第三方 API、MCP 服务"]
+    end
+    subgraph L4["模型层"]
+        D1["通义千问 DashScope / OpenAI / DeepSeek"]
+    end
+    L1 --> L2 --> L3 --> L4
 ```
 
 对应到 Spring AI Alibaba 的三层架构（第 07 章会详细展开）：

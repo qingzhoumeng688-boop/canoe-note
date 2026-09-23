@@ -51,21 +51,42 @@ public class Client {
 
 ## 三、结构与角色
 
-```text
-        ┌──────────┐
-        │  Client  │  只跟门面打交道
-        └────┬─────┘
-             │ watchMovie() / endMovie()
-             ▼
-        ┌─────────────────┐
-        │ HomeTheaterFacade│  门面：聚合子系统，暴露简单接口
-        │    (Facade)      │
-        └────┬────┬────┬───┘
-             │    │    │  持有并调用各子系统
-     ┌───────▼┐ ┌─▼────┐ ┌▼──────┐
-     │ Light  │ │Projec│ │Amplif │ ...（子系统群）
-     │(子系统)│ │tor   │ │ier    │
-     └────────┘ └──────┘ └───────┘
+```mermaid
+classDiagram
+    class Client {
+        +main()
+    }
+    class HomeTheaterFacade {
+        +watchMovie()
+        +endMovie()
+    }
+    class Light {
+        +on()
+        +off()
+        +dim()
+    }
+    class Projector {
+        +on()
+        +off()
+    }
+    class Curtain {
+        +down()
+        +up()
+    }
+    class Amplifier {
+        +on()
+        +off()
+    }
+    class DvdPlayer {
+        +on()
+        +off()
+    }
+    Client --> HomeTheaterFacade : 只调 watchMovie / endMovie
+    HomeTheaterFacade o-- Light : 持有并调用
+    HomeTheaterFacade o-- Projector : 持有并调用
+    HomeTheaterFacade o-- Curtain : 持有并调用
+    HomeTheaterFacade o-- Amplifier : 持有并调用
+    HomeTheaterFacade o-- DvdPlayer : 持有并调用
 ```
 
 | 角色 | 对应到影院 | 职责 |

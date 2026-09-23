@@ -130,16 +130,17 @@ public class UserApplication {
 
 时序（以 Nacos 长轮询为例）：
 
-```text
-客户端 ── 长轮询请求 ──► 配置中心
-                              │
-                    配置没变 → hold 住连接（最长 30s）
-                              │
-              有人改了配置 → 立即返回 "有变更"
-                              │
-客户端 ◄── 收到通知 ──────────┘
-  │
-  └─ 拉取最新配置 → 发布 RefreshEvent → @RefreshScope Bean 重建
+```mermaid
+sequenceDiagram
+    participant C as 客户端
+    participant S as 配置中心
+    C->>S: 发起长轮询请求
+    Note over S: 配置没变，hold 住连接（最长 30s）
+    Note over S: 有人改了配置，立即返回「有变更」
+    S-->>C: 通知「有变更」
+    C->>S: 拉取最新配置
+    S-->>C: 返回最新配置内容
+    Note over C: 发布 RefreshEvent，重建 @RefreshScope Bean
 ```
 
 `spring-cloud-context` 的 `RefreshEvent` 机制：配置变更触发事件，监听者刷新 Environment 并重建 `@RefreshScope` Bean。

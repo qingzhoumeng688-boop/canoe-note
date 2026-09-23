@@ -49,25 +49,25 @@ public class BadAirplane {
 
 ## 三、结构与角色
 
-```text
-        ┌─────────────┐
-        │   Mediator  │  抽象中介者
-        │  (塔台接口)  │
-        └──────┬──────┘
-               │ 实现
-        ┌──────▼──────┐
-        │ ConcreteMedia│  具体中介者（塔台）
-        │    (Tower)  │  持有所有同事的引用
-        └──────┬──────┘
-               │ 通知/转发
-   ┌───────────┼─────────────┐
-   │           │             │
-┌──▼───┐   ┌──▼───┐     ┌───▼──┐
-│Colleague│ │Colleague│   │Colleague│  抽象同事（飞机）
-│ (飞机)  │ │ (飞机)  │   │ (飞机)  │
-└────┬──┘   └────┬──┘   └────┬──┘
-     │   只与塔台    │           │
-     └────通信，不再互相引用──────┘
+```mermaid
+classDiagram
+    class Mediator {
+        +notify(Colleague sender, String event)
+    }
+    class ConcreteMediator {
+        -Colleague a
+        -Colleague b
+        -Colleague c
+        +notify(Colleague sender, String event)
+    }
+    class Colleague {
+        #Mediator mediator
+        +send(String event)
+        +receive(String event)
+    }
+    Mediator <|.. ConcreteMediator : 具体中介者（塔台）
+    ConcreteMediator o-- Colleague : 持有所有同事的引用
+    Colleague --> Mediator : 只与中介者通信，同事间互不引用
 ```
 
 | 角色 | 类名（示例） | 职责 |

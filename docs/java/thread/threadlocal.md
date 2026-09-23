@@ -67,19 +67,26 @@ public class ThreadLocalCounterDemo {
 
 结构示意如下：
 
-```text
-Thread-1                         Thread-2
- └─ ThreadLocalMap               └─ ThreadLocalMap
-     ┌─────────────────────┐         ┌─────────────────────┐
-     │ key→ThreadLocal(弱) │         │ key→ThreadLocal(弱) │
-     │ value→"用户A的数据" │         │ value→"用户B的数据" │
-     ├─────────────────────┤         ├─────────────────────┤
-     │ key→ThreadLocal(弱) │         │       ...           │
-     │ value→"traceId-001" │         └─────────────────────┘
-     └─────────────────────┘
-
-说明：ThreadLocal 只是钥匙，值锁在每个线程自己的"柜子"里。
-      线程销毁时 Map 随之销毁；但线程池的线程会复用，所以必须 remove。
+```mermaid
+flowchart LR
+    subgraph T1["Thread-1"]
+        M1["ThreadLocalMap"]
+        K1["key → ThreadLocal（弱引用）"]
+        V1["value → 用户 A 的数据"]
+        K2["key → ThreadLocal（弱引用）"]
+        V2["value → traceId-001"]
+        M1 --- K1
+        K1 --- V1
+        M1 --- K2
+        K2 --- V2
+    end
+    subgraph T2["Thread-2"]
+        M2["ThreadLocalMap"]
+        K3["key → ThreadLocal（弱引用）"]
+        V3["value → 用户 B 的数据"]
+        M2 --- K3
+        K3 --- V3
+    end
 ```
 
 因此"线程隔离"的本质是：**空间换隔离——每个线程一份数据，谁也不碰谁的。**

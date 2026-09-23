@@ -206,20 +206,18 @@ SSE 在某些代理/浏览器下会被缓冲。可在响应头加 `Cache-Control
 
 完整闭环有 5 步，框架会自动跑完：
 
-```text
-① 你声明工具（@Tool 方法）并注册给模型
-        │
-        ▼
-② 用户提问，模型"决定"要调哪个工具、参数是什么
-        │   （模型返回 finish_reason=tool_calls，而不是答案）
-        ▼
-③ 框架拿着参数，执行你写的 Java 方法，拿到真实结果
-        │
-        ▼
-④ 框架把"工具结果"作为新消息回传给模型
-        │
-        ▼
-⑤ 模型结合工具结果，生成最终的自然语言答复（二次调用）
+```mermaid
+sequenceDiagram
+    participant App as 你的应用
+    participant LLM as 大模型
+    participant Tool as 你写的 Java 工具方法
+    Note over App,LLM: ① 你声明「Tool 方法」并注册给模型
+    App->>LLM: ② 用户提问（附带可用工具清单）
+    LLM-->>App: 返回 finish_reason = tool_calls：工具名 + 参数
+    App->>Tool: ③ 框架拿着参数执行 Java 方法，拿到真实结果
+    Tool-->>App: 返回工具执行结果
+    App->>LLM: ④ 框架把工具结果作为新消息回传
+    LLM-->>App: ⑤ 模型结合结果生成最终自然语言答复（二次调用）
 ```
 
 ::: tip 重点

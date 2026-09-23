@@ -35,20 +35,39 @@ class PearlCoconutMilkTea extends PlainMilkTea { /* 原味+珍珠+椰果 */ }
 
 ## 三、结构与角色
 
-```text
-        ┌──────────────┐
-        │    Drink     │  组件接口（抽象构件）
-        │ (Component)  │
-        └──────┬───────┘
-       ┌──────┴───────┐
-       │              │
- ┌─────▼─────┐  ┌─────▼──────────────┐
- │ PlainMilk │  │ CondimentDecorator  │  装饰者抽象（也实现 Drink）
- │   Tea     │  │ (Decorator)         │  持有被装饰者引用
- │(具体构件) │  └─────┬───────────────┘
- └───────────┘  ┌─────┼─────────┐
-                │     │         │
-             Pearl Coconut   Pudding   （具体装饰者）
+```mermaid
+classDiagram
+    class Drink {
+        +getDescription() String
+        +cost() double
+    }
+    class PlainMilkTea {
+        +getDescription() String
+        +cost() double
+    }
+    class CondimentDecorator {
+        #Drink drink
+        +getDescription() String
+        +cost() double
+    }
+    class Pearl {
+        +getDescription() String
+        +cost() double
+    }
+    class Coconut {
+        +getDescription() String
+        +cost() double
+    }
+    class Pudding {
+        +getDescription() String
+        +cost() double
+    }
+    Drink <|.. PlainMilkTea : 具体构件
+    Drink <|.. CondimentDecorator : 装饰者抽象
+    CondimentDecorator o-- Drink : 持有被装饰者
+    CondimentDecorator <|-- Pearl : 具体装饰者
+    CondimentDecorator <|-- Coconut : 具体装饰者
+    CondimentDecorator <|-- Pudding : 具体装饰者
 ```
 
 | 角色 | 对应到奶茶 | 职责 |

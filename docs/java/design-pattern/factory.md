@@ -51,22 +51,39 @@ public class OrderWithoutFactory {
 
 ## 三、结构与角色
 
-以"工厂方法"为例（最典型的角色划分），ASCII 结构如下：
+以"工厂方法"为例（最典型的角色划分），结构如下：
 
-```text
-   Product（抽象产品）          Creator（抽象创建者/工厂）
-   ┌────────────┐              ┌──────────────────┐
-   │ + bake()   │◄──实现───────│ + factoryMethod() │
-   │ + cut()    │              │ + order()         │──调用──► Product
-   └────────────┘              └──────────────────┘
-        ▲                              ▲
-   实现  │                      继承/实现│
-        │                              │
-   ┌────┴─────┐                 ┌──────┴───────┐
-   │CheesePizza│                 │CheeseFactory  │
-   │DurianPizza│                 │DurianFactory  │
-   └──────────┘                 └──────────────┘
-   （具体产品）                    （具体工厂：决定 new 谁）
+```mermaid
+classDiagram
+    class Product {
+        +bake()
+        +cut()
+    }
+    class CheesePizza {
+        +bake()
+        +cut()
+    }
+    class DurianPizza {
+        +bake()
+        +cut()
+    }
+    class Creator {
+        +factoryMethod() Product
+        +order()
+    }
+    class CheeseFactory {
+        +factoryMethod() Product
+    }
+    class DurianFactory {
+        +factoryMethod() Product
+    }
+    Product <|-- CheesePizza : 具体产品
+    Product <|-- DurianPizza : 具体产品
+    Creator <|-- CheeseFactory : 具体工厂
+    Creator <|-- DurianFactory : 具体工厂
+    Creator ..> Product : order 中调用产品
+    CheeseFactory ..> CheesePizza : new
+    DurianFactory ..> DurianPizza : new
 ```
 
 | 角色 | 职责 | 在哪出现 |

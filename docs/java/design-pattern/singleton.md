@@ -47,19 +47,15 @@ System.out.println(g2.nextId()); // 1  ← 两套计数器，ID 重复了！
 
 单例的结构极其简单，只有"自己"和"自己"：
 
-```text
-        ┌──────────────────────────┐
-        │       Singleton          │
-        ├──────────────────────────┤
-        │ - instance: Singleton     │◄── 私有静态成员，保存唯一实例
-        │ + getInstance(): Singleton│◄── 全局访问点（公开静态方法）
-        │ - Singleton()             │◄── 私有构造器，堵死外部 new
-        └──────────────────────────┘
-                  ▲
-                  │ 只能调用 getInstance()
-        ┌─────────┴─────────┐
-        │   Client（任意调用方）│
-        └───────────────────┘
+```mermaid
+classDiagram
+    class Singleton {
+        -Singleton instance
+        -Singleton()
+        +getInstance() Singleton
+    }
+    class Client
+    Client ..> Singleton : 只能调用 getInstance()
 ```
 
 | 角色 | 职责 | 说明 |

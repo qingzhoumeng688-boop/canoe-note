@@ -49,26 +49,25 @@ public class BadClient {
 
 代理模式的标准结构（以经纪人为例）：
 
-```text
-   客户端 Client
-       │  只认 StarPerformer 接口
-       ▼
-   ┌───────────────┐
-   │  StarAgent    │ ← 代理 Proxy（实现同一接口，内部持有真实对象）
-   │  (经纪人)     │
-   └───────┬───────┘
-           │ 转发"表演"，自己干"面谈/收尾款"
-           ▼
-   ┌───────────────┐
-   │   RealStar    │ ← 真实主题 RealSubject（真正干活的人）
-   │  (真实明星)   │
-   └───────────────┘
-
-        ▲
-        │ 实现
-   ┌───────────────┐
-   │ StarPerformer │ ← 抽象主题 Subject（代理与真实主题共同实现的接口）
-   └───────────────┘
+```mermaid
+classDiagram
+    class Client {
+        +main()
+    }
+    class StarPerformer {
+        +perform()
+    }
+    class StarAgent {
+        -RealStar realStar
+        +perform()
+    }
+    class RealStar {
+        +perform()
+    }
+    Client --> StarPerformer : 只认接口
+    StarPerformer <|.. StarAgent : 代理 Proxy
+    StarPerformer <|.. RealStar : 真实主题 RealSubject
+    StarAgent o-- RealStar : 转发表演，自己干面谈/收尾款
 ```
 
 | 角色 | 对应类 | 职责 |

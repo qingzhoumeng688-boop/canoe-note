@@ -51,18 +51,23 @@ Spring 带来了三个关键转变：
 
 Spring 早已不是当年那个单纯的 IOC 容器，而是一整个生态。它们的定位与学习顺序如下：
 
-```text
-Spring Framework（核心：IOC / AOP / 事务 / JDBC）
-        │
-        ├── Spring Boot（快速开发：自动配置、内嵌容器、起步依赖）
-        │         │
-        │         └── Spring Cloud（微服务：注册中心、网关、熔断、配置中心）
-        │
-        ├── Spring Security（认证与授权）
-        ├── Spring Data（统一的数据访问，含 JPA / Redis / MongoDB）
-        ├── Spring Batch（批处理）
-        ├── Spring Session（分布式会话）
-        └── Spring AMQP / Kafka（消息）
+```mermaid
+flowchart TD
+    SF["Spring Framework（核心：IOC / AOP / 事务 / JDBC）"]
+    SB["Spring Boot（快速开发：自动配置、内嵌容器、起步依赖）"]
+    SC["Spring Cloud（微服务：注册中心、网关、熔断、配置中心）"]
+    SS["Spring Security（认证与授权）"]
+    SD["Spring Data（统一的数据访问，含 JPA / Redis / MongoDB）"]
+    SBT["Spring Batch（批处理）"]
+    SSE["Spring Session（分布式会话）"]
+    SMQ["Spring AMQP / Kafka（消息）"]
+    SF --> SB
+    SB --> SC
+    SF --> SS
+    SF --> SD
+    SF --> SBT
+    SF --> SSE
+    SF --> SMQ
 ```
 
 **学习顺序建议**：先吃透 `Spring Framework` 的核心（本专栏的重点），再用 `Spring Boot` 提速开发，最后在微服务场景下接触 `Spring Cloud`。`Spring Security`、`Spring Data` 等属于"用到再学"的模块化能力。

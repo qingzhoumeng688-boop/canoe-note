@@ -19,16 +19,20 @@
 
 ### 1.2 文本图：单体 vs 微服务多实例
 
-```text
-【单体应用：一个 JVM，一把锁搞定】
-请求A ─┐
-请求B ─┼─► 同一个 JVM ──synchronized 锁──► 同一时刻只有 1 个线程进临界区 ✅
-请求C ─┘
+```mermaid
+flowchart LR
+    A["请求A"] --> J["同一个 JVM"]
+    B["请求B"] --> J
+    C["请求C"] --> J
+    J --> L["synchronized 锁：同一时刻只有 1 个线程进临界区"]
+```
 
-【微服务：两个 JVM，各管各的锁】
-请求A ──► 实例1（JVM-A）──synchronized 锁A──► 放行 1 个线程
-请求B ──► 实例2（JVM-B）──synchronized 锁B──► 放行 1 个线程
-结果：A 和 B 同时进临界区 ❌ 两个线程同时改同一份数据（比如库存）
+```mermaid
+flowchart LR
+    A["请求A"] --> J1["实例1（JVM-A）"] --> L1["synchronized 锁A：放行 1 个线程"]
+    B["请求B"] --> J2["实例2（JVM-B）"] --> L2["synchronized 锁B：放行 1 个线程"]
+    L1 --> R["结果：A 和 B 同时进临界区，两个线程同时改同一份数据（比如库存）"]
+    L2 --> R
 ```
 
 ### 1.3 本地锁示例代码（只在当前 JVM 内有效）
@@ -283,13 +287,17 @@ public class V4Lock {
 
 **致命缺陷（GET 和 DEL 非原子，仍会误删）**：`GET` 和 `DEL` 是两步。时序如下：
 
-```text
-V4 误删时序：
-线程A 抢锁(value=A,30s) ──► 业务跑
-         │ 30s 到，A 的锁过期
-线程B 抢锁(value=B) 成功 ──► 进临界区
-线程A 的 finally 执行 GET ──► 读到 value=B（已是 B 的锁）
-线程A 的 finally 执行 DEL ──► 把 B 的锁删了 ❌ B 失去保护，且 B 和后来者并发
+```mermaid
+sequenceDiagram
+    participant A as 线程A
+    participant R as Redis
+    participant B as 线程B
+    Note over A,B: V4 误删时序
+    A->>R: 抢锁（value=A，30s）并执行业务
+    Note over A,R: 30s 到，A 的锁过期
+    B->>R: 抢锁（value=B）成功，进临界区
+    A->>R: finally 执行 GET，读到 value=B（已是 B 的锁）
+    A->>R: finally 执行 DEL，把 B 的锁删了，B 失去保护，且 B 和后来者并发
 ```
 
 根因：`if (value.equals(current)) { delete }` 这一"判断 + 删除"不是原子的，判断完到删除之间，锁可能刚好被 Redis 过期、被别人拿走。
@@ -933,19 +941,17 @@ Redlock 思路：部署 **N 个（一般 5 个）互相独立、无主从关系*
 - **超过半数（N/2 + 1，5 个里要 3 个）** 加锁成功，**且总耗时 < 锁的有效时间**，才算加锁成功；
 - 释放时向**所有**节点发解锁（不管当初哪个成功）。
 
-```text
-5 个独立 Redis 节点（无主从、互不复制）：
-
-   Client
-     │ 依次向 5 个节点加同一把锁（各带独立超时）
-     ├──► Node1  ✓
-     ├──► Node2  ✓
-     ├──► Node3  ✗ (超时/宕机)
-     ├──► Node4  ✓
-     └──► Node5  ✗
-     成功节点 = 3 ≥ 5/2+1=3  ✓ 且总耗时 < TTL  ⇒ 加锁成功
-
-   释放时：向 Node1~Node5 全部发解锁
+```mermaid
+flowchart TD
+    C["Client（面对 5 个独立 Redis 节点：无主从、互不复制）"] --> N1["Node1 加锁成功"]
+    C --> N2["Node2 加锁成功"]
+    C --> N3["Node3 加锁失败（超时 / 宕机）"]
+    C --> N4["Node4 加锁成功"]
+    C --> N5["Node5 加锁失败"]
+    N1 --> R["成功节点 = 3 ≥ 5/2+1 = 3，且总耗时小于 TTL，加锁成功"]
+    N2 --> R
+    N4 --> R
+    R --> F["释放时：向 Node1~Node5 全部发解锁"]
 ```
 
 ### 5.2 争议要点：Martin Kleppmann vs antirez

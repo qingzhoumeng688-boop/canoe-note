@@ -60,13 +60,13 @@ Gateway 的三个骨架概念：
 
 请求处理流程：
 
-```text
-请求进入
-  → Gateway Handler Mapping：匹配 Route（看断言）
-  → Web Handler：按 Route 找到 Filter Chain
-  → 依次执行 GlobalFilter + GatewayFilter
-  → 转发到目标服务
-  → 响应回来再经过 Filter Chain
+```mermaid
+flowchart TD
+    REQ["请求进入"] --> HM["Gateway Handler Mapping：匹配 Route（看断言）"]
+    HM --> WH["Web Handler：按 Route 找到 Filter Chain"]
+    WH --> FL["依次执行 GlobalFilter + GatewayFilter"]
+    FL --> SV["转发到目标服务"]
+    SV --> FB["响应回来再经过 Filter Chain"]
 ```
 
 ## 五、路由配置

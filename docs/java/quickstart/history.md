@@ -27,20 +27,13 @@
 
 早期 Java 按应用场景划分成三个平台，初学者最容易搞混：
 
-```text
-┌───────────────────────────────────────────────────────┐
-│  Java SE   (Standard Edition，标准版)                  │
-│  核心语言 + 基础类库（集合、IO、并发、网络）           │
-│  → 一切的地基，学 Java 必学 SE                          │
-│                                                        │
-│  Java EE   (Enterprise Edition，企业版)                │
-│  在 SE 之上加 Web、事务、消息、持久化                  │
-│  → 做后端企业级系统；后来更名为 Jakarta EE             │
-│                                                        │
-│  Java ME   (Micro Edition，微型版)                     │
-│  为功能机、嵌入式裁剪的迷你版                          │
-│  → 曾用于早期手机，如今基本被 Android 取代             │
-└───────────────────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    SE["Java SE（Standard Edition 标准版）：核心语言 + 基础类库（集合、IO、并发、网络），一切的地基"]
+    EE["Java EE（Enterprise Edition 企业版）：在 SE 之上加 Web、事务、消息、持久化，后更名 Jakarta EE"]
+    ME["Java ME（Micro Edition 微型版）：为功能机、嵌入式裁剪的迷你版，如今基本被 Android 取代"]
+    SE -->|"在其之上扩展"| EE
+    SE -->|"按其裁剪子集"| ME
 ```
 
 一句话记忆：**SE 是地基，EE 是盖楼，ME 是给"小手机"用的精简版**。今天你面试、写后端，99% 打交道的是 **Java SE + Java EE（现 Jakarta EE）**。
@@ -86,12 +79,14 @@ Java 的版本号有一段"黑历史"：早期叫 **JDK 1.0 ~ 1.4**，从 1.5 �
 
 ## 七、学完 Java 能做什么
 
-```text
-后端开发   → 最主流，Spring Boot + MySQL + Redis + MQ
-大数据     → Hadoop / Spark / Flink（大量运行在 JVM 上）
-中间件     → RocketMQ / Kafka / Dubbo 等大量用 Java 编写
-Android    → 虽已转向 Kotlin，但底层仍是 JVM 生态
-企业级系统 → 银行、保险、电商的"重后端"
+```mermaid
+flowchart TD
+    J["学完 Java 能做什么"]
+    J --> B["后端开发：最主流，Spring Boot + MySQL + Redis + MQ"]
+    J --> D["大数据：Hadoop / Spark / Flink（大量运行在 JVM 上）"]
+    J --> M["中间件：RocketMQ / Kafka / Dubbo 等大量用 Java 编写"]
+    J --> A["Android：虽已转向 Kotlin，但底层仍是 JVM 生态"]
+    J --> E["企业级系统：银行、保险、电商的重后端"]
 ```
 
 ## 本篇小结

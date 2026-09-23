@@ -42,18 +42,28 @@ public class BadGameRole {
 
 ## 三、结构与角色
 
-```text
-   ┌──────────────┐       创建/恢复        ┌──────────────┐
-   │  Originator  │ ───────────────────▶ │   Memento    │
-   │  (发起人/角色)│ ◀─────────────────── │  (备忘录/存档) │
-   └──────┬───────┘       读取状态         └──────┬───────┘
-          │                                       │ 只提供只读 getter
-          │                                       │
-          │           保存 / 取回                   │
-          └──────────▶ ┌──────────────┐ ◀─────────┘
-                       │  Caretaker   │  管理者只管存取，不读内容
-                       │  (管理者/存档槽)│
-                       └──────────────┘
+```mermaid
+classDiagram
+    class Originator {
+        -int hp
+        -int mp
+        +save() Memento
+        +restore(Memento m)
+    }
+    class Memento {
+        -int hp
+        -int mp
+        +getHp() int
+        +getMp() int
+    }
+    class Caretaker {
+        -Memento memento
+        +saveMemento(Memento m)
+        +getMemento() Memento
+    }
+    Originator ..> Memento : 创建存档并恢复状态
+    Originator --> Caretaker : 交给管理者保存
+    Caretaker o-- Memento : 只管存取，不读内容
 ```
 
 | 角色 | 类名（示例） | 职责 |

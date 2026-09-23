@@ -30,41 +30,30 @@
 
 用一张文本图直观感受一下三者的结构差异：
 
-```text
-【物理机】
-┌─────────────────────────────────────────┐
-│  App A        App B        App C        │  ← 三个应用挤在一起，互相干扰
-├─────────────────────────────────────────┤
-│            Host Operating System        │
-├─────────────────────────────────────────┤
-│                Server (硬件)            │
-└─────────────────────────────────────────┘
-
-【虚拟机】
-┌──────────┐ ┌──────────┐ ┌──────────┐
-│  App A   │ │  App B   │ │  App C   │
-├──────────┤ ├──────────┤ ├──────────┤
-│ Guest OS │ │ Guest OS │ │ Guest OS │  ← 每个 VM 自带完整操作系统（重！）
-│ (Linux)  │ │ (Linux)  │ │ (Linux)  │
-├──────────┤ ├──────────┤ ├──────────┤
-│          Hypervisor (VMware/KVM)        │  ← 虚拟硬件层
-├─────────────────────────────────────────┤
-│            Host Operating System        │
-├─────────────────────────────────────────┤
-│                Server (硬件)            │
-└─────────────────────────────────────────┘
-
-【容器】
-┌──────────┐ ┌──────────┐ ┌──────────┐
-│  App A   │ │  App B   │ │  App C   │
-│ +libs    │ │ +libs    │ │ +libs    │  ← 只打包应用和自己需要的库
-├──────────┤ ├──────────┤ ├──────────┤
-│        Docker Engine (容器运行时)       │  ← 没有 Hypervisor 这一层
-├─────────────────────────────────────────┤
-│            Host Operating System        │  ← 所有容器共享宿主机内核
-├─────────────────────────────────────────┤
-│                Server (硬件)            │
-└─────────────────────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph PHYSICAL["物理机"]
+        P1["App A · App B · App C（挤在一起，互相干扰）"]
+        P1 --> P2["Host Operating System 宿主机操作系统"]
+        P2 --> P3["Server 硬件"]
+    end
+    subgraph VM["虚拟机"]
+        V1["App A"] --> V1OS["Guest OS (Linux)"]
+        V2["App B"] --> V2OS["Guest OS (Linux)"]
+        V3["App C"] --> V3OS["Guest OS (Linux)"]
+        V1OS --> HYP["Hypervisor (VMware/KVM) 虚拟硬件层"]
+        V2OS --> HYP
+        V3OS --> HYP
+        HYP --> VHOST["Host Operating System"]
+        VHOST --> VSERVER["Server 硬件"]
+    end
+    subgraph CONTAINER["容器"]
+        C1["App A + libs"] --> ENG["Docker Engine (容器运行时) 没有 Hypervisor 这一层"]
+        C2["App B + libs"] --> ENG
+        C3["App C + libs"] --> ENG
+        ENG --> CHOST["Host Operating System 所有容器共享宿主机内核"]
+        CHOST --> CSERVER["Server 硬件"]
+    end
 ```
 
 关键差异就在那句：**虚拟机虚拟的是"硬件"，容器虚拟的是"操作系统"**。容器不需要每个都装一套操作系统，它们共享宿主机的内核，所以能做得又快又小。
@@ -146,27 +135,13 @@ Docker 有三个必须搞清楚的概念：**镜像（Image）**、**容器（Co
 
 ### 3.2 关系图
 
-```text
-    Dockerfile                    Registry（仓库，如 Docker Hub）
-        │                                  │
-        │  docker build                    │ docker pull（下载）
-        │  （按 Dockerfile 构建）           │ docker push（上传）
-        ▼                                  ▼
-   ┌─────────────────────────────────────────────┐
-   │            Image（镜像，只读模板）            │
-   │   分层存储：base 层 + 层1 + 层2 + ...        │
-   └─────────────────────────────────────────────┘
-        │
-        │  docker run（运行）
-        ▼
-   ┌─────────────────────────────────────────────┐
-   │            Container（容器，运行实例）        │
-   │   镜像的只读层（共享） + 容器可写层（独有）    │
-   └─────────────────────────────────────────────┘
-        │
-        │  docker commit（一般不用，用 Dockerfile 才是正道）
-        ▼
-      新镜像
+```mermaid
+flowchart TD
+    DF["Dockerfile"] -->|"docker build（按 Dockerfile 构建）"| IMG["Image 镜像（只读模板）分层存储：base 层 + 层1 + 层2 + ..."]
+    REG["Registry 仓库（如 Docker Hub）"] -->|"docker pull（下载）"| IMG
+    IMG -->|"docker push（上传）"| REG
+    IMG -->|"docker run（运行）"| CON["Container 容器（运行实例）镜像的只读层（共享）+ 容器可写层（独有）"]
+    CON -->|"docker commit（一般不用，用 Dockerfile 才是正道）"| NIMG["新镜像"]
 ```
 
 ### 3.3 镜像 Image
@@ -224,26 +199,19 @@ registry.cn-hangzhou.aliyuncs.com/myproject/myapp:1.0.0
 
 ### 4.1 架构图
 
-```text
-┌──────────────────┐                        ┌──────────────────────────┐
-│  Docker Client   │   REST API over        │      Docker Host         │
-│  （docker 命令）  │ ◄──── unix socket ────► │                          │
-│                  │      或 TCP:2375       │  ┌────────────────────┐  │
-│  docker build    │                        │  │  Docker Daemon     │  │
-│  docker pull     │                        │  │  (dockerd)         │  │
-│  docker run      │                        │  │  真正干活的守护进程 │  │
-└──────────────────┘                        │  └─────────┬──────────┘  │
-                                            │            │             │
-                                            │  ┌─────────▼──────────┐  │
-                                            │  │  Containers 容器   │  │
-                                            │  │  Images 镜像       │  │
-                                            │  └───────────────────┘  │
-                                            └────────────┬─────────────┘
-                                                         │ pull / push
-                                            ┌────────────▼─────────────┐
-                                            │   Registry（Docker Hub / │
-                                            │   阿里云 ACR / Harbor）  │
-                                            └──────────────────────────┘
+```mermaid
+flowchart TD
+    subgraph EXT["外部"]
+        CLIENT["Docker Client（docker 命令）docker build / docker pull / docker run"]
+    end
+    subgraph HOSTD["Docker Host"]
+        DAEMON["Docker Daemon (dockerd) 真正干活的守护进程"]
+        OBJ["Containers 容器 / Images 镜像"]
+        DAEMON --> OBJ
+    end
+    REGISTRY["Registry（Docker Hub / 阿里云 ACR / Harbor）"]
+    CLIENT -->|"REST API over unix socket 或 TCP:2375"| DAEMON
+    DAEMON -->|"pull / push"| REGISTRY
 ```
 
 ### 4.2 各个角色说明
@@ -690,18 +658,14 @@ docker rmi nginx
 
 ### 7.4 用这条链路理解容器生命周期
 
-```text
-                    docker create                     docker start
-  镜像 Image    ──────────────────►  容器 Created  ──────────────────►  容器 Running
-                                          │                                  │
-                                          │                                  │ docker stop
-                                          │                                  ▼
-                                          │                            容器 Exited
-                                          │                                  │
-                                          │         docker rm                 │
-                                          └──────────────────────────────────┴──►  删除
-                                          
-  docker run  =  docker create + docker start + (可选) docker attach
+```mermaid
+flowchart TD
+    IMG["镜像 Image"] -->|"docker create"| CREATED["容器 Created"]
+    CREATED -->|"docker start"| RUNNING["容器 Running"]
+    RUNNING -->|"docker stop"| EXITED["容器 Exited"]
+    CREATED -->|"docker rm"| DEL["删除"]
+    EXITED -->|"docker rm"| DEL
+    NOTE["docker run = docker create + docker start + (可选) docker attach"]
 ```
 
 容器的几种状态：

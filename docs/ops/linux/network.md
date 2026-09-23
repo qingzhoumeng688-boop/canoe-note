@@ -146,16 +146,22 @@ mtr -n 8.8.8.8                # 持续采样的 traceroute，看稳定性
 
 "从浏览器打不开"的排查顺序：
 
-```text
-本机能 ping 通目标 IP？ ──否──▶ 网络层/路由问题（ip route、网关）
-   │是
-能解析域名？ ────────────否──▶ DNS 问题（dig、resolv.conf）
-   │是
-目标端口通？ ────────────否──▶ 防火墙/服务没起（nc、ss、telnet）
-   │是
-HTTP 返回码正常？ ────────否──▶ 应用层问题（curl -I、看业务日志）
-   │是
-页面内容正确？ ────────────否──▶ 后端逻辑/代理配置问题
+```mermaid
+flowchart TD
+    P1{"本机能 ping 通目标 IP?"}
+    P2{"能解析域名?"}
+    P3{"目标端口通?"}
+    P4{"HTTP 返回码正常?"}
+    P5{"页面内容正确?"}
+    P1 -->|"否"| E1["网络层 / 路由问题（ip route、网关）"]
+    P1 -->|"是"| P2
+    P2 -->|"否"| E2["DNS 问题（dig、resolv.conf）"]
+    P2 -->|"是"| P3
+    P3 -->|"否"| E3["防火墙 / 服务没起（nc、ss、telnet）"]
+    P3 -->|"是"| P4
+    P4 -->|"否"| E4["应用层问题（curl -I、看业务日志）"]
+    P4 -->|"是"| P5
+    P5 -->|"否"| E5["后端逻辑 / 代理配置问题"]
 ```
 
 ## 五、端口与连接 ss
@@ -174,14 +180,17 @@ ss -tulnp
 
 TCP 连接状态图（高频面试与排障）：
 
-```text
-          主动打开               被动打开
-  CLOSED ─────▶ SYN_SENT ───▶ SYN_RCVD ───▶ ESTABLISHED
-                                                  │
-  主动关闭 ── FIN_WAIT_1 ──▶ FIN_WAIT_2 ──▶ TIME_WAIT
-  被动关闭 ── CLOSE_WAIT ──▶ LAST_ACK ──▶ CLOSED
-                                                  │
-                                          ESTABLISHED
+```mermaid
+flowchart TD
+    C0["CLOSED"] -->|"主动打开"| SS["SYN_SENT"]
+    SS -->|"被动打开"| SR["SYN_RCVD"]
+    SR --> EST["ESTABLISHED"]
+    EST -->|"主动关闭"| FW1["FIN_WAIT_1"]
+    FW1 --> FW2["FIN_WAIT_2"]
+    FW2 --> TW["TIME_WAIT"]
+    EST -->|"被动关闭"| CW["CLOSE_WAIT"]
+    CW --> LA["LAST_ACK"]
+    LA --> C1["CLOSED"]
 ```
 
 - **ESTABLISHED**：已建立连接，正常通信中。

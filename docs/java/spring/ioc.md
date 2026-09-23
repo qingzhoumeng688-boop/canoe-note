@@ -11,14 +11,17 @@ Spring 里有两个核心接口：
 - **`BeanFactory`**：最底层的容器，提供 `getBean()` 等基础能力，**默认懒加载**——用到某个 Bean 时才创建。
 - **`ApplicationContext`**：`BeanFactory` 的子接口，**启动时就把所有单例 Bean 创建好**（饿汉式），并且额外提供事件发布、国际化（MessageSource）、资源加载、AOP 集成等能力。**日常开发用的几乎都是它**。
 
-```text
-BeanFactory（顶层接口，懒加载，能力最小）
-   ▲
-   │ 继承
-ApplicationContext（子接口，启动即创建单例，能力最全）
-   ├── ClassPathXmlApplicationContext   （读 classpath 下的 XML）
-   ├── AnnotationConfigApplicationContext（读 @Configuration 类）
-   └── WebApplicationContext           （Web 环境，如 Spring Boot 内嵌）
+```mermaid
+flowchart TD
+    BF["BeanFactory：顶层接口，懒加载，能力最小"]
+    AC["ApplicationContext：子接口，启动即创建单例，能力最全"]
+    X1["ClassPathXmlApplicationContext：读 classpath 下的 XML"]
+    X2["AnnotationConfigApplicationContext：读 @Configuration 类"]
+    X3["WebApplicationContext：Web 环境，如 Spring Boot 内嵌"]
+    AC -->|"继承"| BF
+    AC --> X1
+    AC --> X2
+    AC --> X3
 ```
 
 **记忆点**：`BeanFactory` 像是"按需供货的小卖部"，`ApplicationContext` 像是"开门前就备好所有货的超市"。生产环境永远用 `ApplicationContext`。
@@ -359,21 +362,22 @@ public class SafeService {
 - **构造器注入的循环依赖无法解决**：A 要创建先要 B，B 要创建先要 A，死锁，直接抛 `BeanCurrentlyInCreationException`。
 - **字段 / Setter 注入的循环依赖可以解决**：靠**三级缓存**提前暴露"半成品"对象。
 
-```text
-三级缓存（都是 Map）：
+```mermaid
+flowchart TD
+    L1["一级缓存 singletonObjects：成品池，完全初始化好的单例"]
+    L2["二级缓存 earlySingletonObjects：早期对象池，已实例化但未填充完"]
+    L3["三级缓存 singletonFactories：工厂池，能产出早期引用（含 AOP 早期代理）"]
+```
 
-singletonObjects        ← 一级：成品池（完全初始化好的单例）
-earlySingletonObjects   ← 二级：早期对象池（已实例化但未填充完）
-singletonFactories      ← 三级：工厂池（能产出早期引用，含 AOP 早期代理）
-
-解决 A↔B 字段循环依赖的流程：
-1. 创建 A：实例化（new A）→ 把"早期 A 的工厂"放进三级缓存
-2. 给 A 填充属性，发现需要 B → 去创建 B
-3. 创建 B：实例化 → 工厂进三级缓存 → 填充属性需要 A
-4. 要 A 时，从三级缓存取出工厂，生成"早期 A"（若需 AOP 则生成早期代理）
-   放进二级缓存，返回给 B 完成注入
-5. B 初始化完成，升入一级缓存
-6. A 拿到 B，继续初始化，最终 A 也升入一级缓存
+```mermaid
+flowchart TD
+    S1["① 创建 A：实例化 new A，把早期 A 的工厂放进三级缓存"]
+    S2["② 给 A 填充属性，发现需要 B，转去创建 B"]
+    S3["③ 创建 B：实例化、工厂进三级缓存，填充属性时需要 A"]
+    S4["④ 从三级缓存取出工厂生成早期 A（需要 AOP 时生成早期代理），放进二级缓存并返回给 B 完成注入"]
+    S5["⑤ B 初始化完成，升入一级缓存"]
+    S6["⑥ A 拿到 B 继续初始化，最终 A 也升入一级缓存"]
+    S1 --> S2 --> S3 --> S4 --> S5 --> S6
 ```
 
 **重要变化**：**Spring Boot 2.6 起默认禁止循环依赖**（`spring.main.allow-circular-references=false`）。遇到循环依赖，优先考虑**重构设计**（抽公共逻辑、改注入方式），而不是开开关放行。

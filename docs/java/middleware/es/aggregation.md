@@ -241,19 +241,16 @@ ES 聚合分三大类，理解"谁吃谁"是后面不晕的关键：
 
 它们的关系用一张缩进图表示（这是新手最容易绕晕的地方）：
 
-```text
-Metric 聚合   ── 直接吃"一组文档"，吐出一个数字
-                例如 avg(price) 吃 1000 条文档 → 599.37
-
-Bucket 聚合   ── 吃"一组文档"，吐出 N 个桶（每个桶又是一组文档）
-                例如 terms(brand) 吃 1000 条 → [华为:320, 小米:280, ...]
-                  │
-                  └─ 每个桶里可以继续套 Metric / Bucket（子聚合）
-                      例如 华为桶 里再 avg(price)
-
-Pipeline 聚合 ── 不吃"文档"，只吃"别的聚合的输出"
-                例如 derivative(月销售额) 吃 [1月:100, 2月:120, ...] → 算出环比增量
-                ⚠️ 所以它的 buckets_path 指向上面的某个聚合名字，而不是 field
+```mermaid
+flowchart TD
+    DOC["输入：一组文档"] --> M["Metric 聚合：直接吐出一个数字（如 avg(price) → 599.37）"]
+    DOC --> BK["Bucket 聚合：吐出 N 个桶（如 terms(brand) → 华为桶 / 小米桶）"]
+    BK --> SUB["每个桶里可继续套子聚合 Metric / Bucket（如华为桶里再 avg(price)）"]
+    M --> PL["Pipeline 聚合：只吃别的聚合的输出"]
+    BK --> PL
+    SUB --> PL
+    PL --> OUT["二次计算结果（如 derivative 算环比增量）"]
+    PL -->|"buckets_path 指向上游聚合名，而不是 field"| OUT
 ```
 
 ::: warning Pipeline 的本质区别

@@ -61,28 +61,39 @@ class BadManager extends BadEmployee {
 
 ## 三、结构与角色
 
-```text
-        ┌──────────────────────┐             ┌──────────────────────┐
-        │       Visitor        │             │       Element        │
-        │  (访问者接口)         │             │  (元素接口)           │
-        │  + visit(Engineer)   │             │  + accept(Visitor)   │
-        │  + visit(Manager)    │             └──────────▲───────────┘
-        └──────────▲───────────┘                        │ implements
-                   │ implements                ┌────────┴─────────┐
-        ┌──────────┴───────────┐             │   Engineer       │
-        │   BonusVisitor       │             │   Manager        │
-        │   KpiVisitor         │             │ (具体元素)         │
-        │ (具体访问者)          │             │ + accept(v):      │
-        └──────────────────────┘             │     v.visit(this) │
-                                             └────────┬─────────┘
-                                                      │ 持有
-                                                      ▼
-                                             ┌──────────────────────┐
-                                             │      Company          │
-                                             │  (对象结构 ObjectStructure)│
-                                             │  - employees:List     │
-                                             │  + accept(Visitor)    │
-                                             └──────────────────────┘
+```mermaid
+classDiagram
+    class Visitor {
+        +visit(Engineer e)
+        +visit(Manager m)
+    }
+    class BonusVisitor {
+        +visit(Engineer e)
+        +visit(Manager m)
+    }
+    class KpiVisitor {
+        +visit(Engineer e)
+        +visit(Manager m)
+    }
+    class Element {
+        +accept(Visitor v)
+    }
+    class Engineer {
+        +accept(Visitor v)
+    }
+    class Manager {
+        +accept(Visitor v)
+    }
+    class Company {
+        -List employees
+        +accept(Visitor v)
+    }
+    Visitor <|.. BonusVisitor : 具体访问者
+    Visitor <|.. KpiVisitor : 具体访问者
+    Element <|.. Engineer : 具体元素
+    Element <|.. Manager : 具体元素
+    Company o-- Element : 持有员工列表
+    Element ..> Visitor : accept 中回调 v.visit(this)
 ```
 
 | 角色 | 对应类 | 职责 |
